@@ -43,3 +43,25 @@ func MessageInjector() *controller.MessageController {
 	)
 	return nil
 }
+
+func UserSpaceLastSeenInjector() *controller.UserSpaceLastSeenController {
+	wire.Build(
+		controller.NewUserSpaceLastSeenController,
+		service.NewUserSpaceLastSeenServiceImpl,
+		repository.NewUserSpaceLastSeenRepositoryImpl,
+		config.Validator,
+		config.DatabaseConnection,
+	)
+	return nil
+}
+
+func UserSpaceLastSeenInjectorWithAuth() *controller.UserSpaceLastSeenController {
+	wire.Build(
+		controller.NewUserSpaceLastSeenController,
+		service.NewUserSpaceLastSeenServiceImpl,
+		repository.NewUserSpaceLastSeenRepositoryImpl,
+		config.Validator,
+		config.DatabaseConnection,
+	)
+	return nil
+}

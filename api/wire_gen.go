@@ -41,3 +41,21 @@ func MessageInjector() *controller.MessageController {
 	messageController := controller.NewMessageController(messageService)
 	return messageController
 }
+
+func UserSpaceLastSeenInjector() *controller.UserSpaceLastSeenController {
+	db := config.DatabaseConnection()
+	userSpaceLastSeenRepository := repository.NewUserSpaceLastSeenRepositoryImpl(db)
+	validate := config.Validator()
+	userSpaceLastSeenService := service.NewUserSpaceLastSeenServiceImpl(userSpaceLastSeenRepository, validate)
+	userSpaceLastSeenController := controller.NewUserSpaceLastSeenController(userSpaceLastSeenService)
+	return userSpaceLastSeenController
+}
+
+func UserSpaceLastSeenInjectorWithAuth() *controller.UserSpaceLastSeenController {
+	db := config.DatabaseConnection()
+	userSpaceLastSeenRepository := repository.NewUserSpaceLastSeenRepositoryImpl(db)
+	validate := config.Validator()
+	userSpaceLastSeenService := service.NewUserSpaceLastSeenServiceImpl(userSpaceLastSeenRepository, validate)
+	userSpaceLastSeenController := controller.NewUserSpaceLastSeenController(userSpaceLastSeenService)
+	return userSpaceLastSeenController
+}

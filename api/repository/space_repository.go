@@ -4,7 +4,6 @@ import (
 	"errors"
 	"go_confess_space-project/dto"
 	"go_confess_space-project/model"
-	"time"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -73,7 +72,6 @@ func (t *SpaceRepositoryImpl) UpdateSpace(requestBody dto.UpdateSpaceRequest) (m
 
 	space.Name = requestBody.Name
 	space.Description = requestBody.Description
-	space.UpdatedAt = time.Now()
 
 	result := t.Db.Save(&space)
 	if result.Error != nil {

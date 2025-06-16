@@ -29,6 +29,7 @@ func SetupRouter() *gin.Engine {
 	SpaceRoutes(apiV1)
 	UserSpaceRoutes(apiV1)
 	MessageRoutes(apiV1)
+	UserSpaceLastSeenRoutes(apiV1)
 
 	return r
 }
