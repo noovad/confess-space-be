@@ -1,6 +1,7 @@
 package responsejson
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -76,9 +77,13 @@ func InternalServerError(ctx *gin.Context, err error, message ...string) {
 
 func BadRequest(ctx *gin.Context, err error, message ...string) {
 	msg := "Bad Request"
+	fmt.Println("Bad Request:", err.Error())
+	fmt.Println("Bad Request message slice:", message)
 	if len(message) > 0 && message[0] != "" {
+		fmt.Println("Bad Request custom message:", message[0])
 		msg = message[0]
 	}
+	fmt.Println("Bad Request final message:", msg)
 	ctx.JSON(http.StatusBadRequest, Response{
 		Code:    http.StatusBadRequest,
 		Status:  "Bad Request",

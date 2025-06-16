@@ -3,7 +3,7 @@ package service
 import (
 	"go_confess_space-project/api/repository"
 	"go_confess_space-project/dto"
-	"go_confess_space-project/helper/customError"
+	customerror "go_confess_space-project/helper/customerrors"
 	"go_confess_space-project/model"
 
 	"github.com/go-playground/validator/v10"
@@ -31,18 +31,18 @@ func (s *UserSpaceLastSeenServiceImpl) GetLastSeenByUserAndSpace(userID string, 
 	return s.Repository.GetLastSeenByUserAndSpace(userID, spaceID)
 }
 
-func (s *UserSpaceLastSeenServiceImpl) CreateOrUpdateLastSeen(request dto.UserSpaceLastSeenRequest) (model.UserSpaceLastSeen, error) {
-	if err := s.Validate.Struct(request); err != nil {
+func (s *UserSpaceLastSeenServiceImpl) CreateOrUpdateLastSeen(req dto.UserSpaceLastSeenRequest) (model.UserSpaceLastSeen, error) {
+	if err := s.Validate.Struct(req); err != nil {
 		return model.UserSpaceLastSeen{}, customerror.WrapValidation(err)
 	}
 
-	requestModel := model.UserSpaceLastSeen{
-		UserID:   request.UserID,
-		SpaceID:  request.SpaceID,
-		LastSeen: request.LastSeen,
+	reqModel := model.UserSpaceLastSeen{
+		UserID:   req.UserID,
+		SpaceID:  req.SpaceID,
+		LastSeen: req.LastSeen,
 	}
 
-	return s.Repository.CreateOrUpdateLastSeen(requestModel)
+	return s.Repository.CreateOrUpdateLastSeen(reqModel)
 }
 
 func (s *UserSpaceLastSeenServiceImpl) DeleteLastSeenByUserAndSpace(userID string, spaceID string) error {

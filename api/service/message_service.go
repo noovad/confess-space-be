@@ -3,7 +3,7 @@ package service
 import (
 	"go_confess_space-project/api/repository"
 	"go_confess_space-project/dto"
-	customerror "go_confess_space-project/helper/customError"
+	customerror "go_confess_space-project/helper/customerrors"
 	"go_confess_space-project/model"
 
 	"github.com/go-playground/validator/v10"
@@ -28,17 +28,17 @@ type MessageServiceImpl struct {
 	Validate          *validator.Validate
 }
 
-func (m *MessageServiceImpl) CreateMessage(MessageRequest dto.MessageRequest) (model.Message, error) {
-	err := m.Validate.Struct(MessageRequest)
+func (m *MessageServiceImpl) CreateMessage(req dto.MessageRequest) (model.Message, error) {
+	err := m.Validate.Struct(req)
 
 	if err != nil {
 		return model.Message{}, customerror.WrapValidation(err)
 	}
 
 	message := model.Message{
-		SpaceID: MessageRequest.SpaceID,
-		UserID:  MessageRequest.UserID,
-		Content: MessageRequest.Content,
+		SpaceID: req.SpaceID,
+		UserID:  req.UserID,
+		Content: req.Content,
 	}
 
 	return m.MessageRepository.CreateMessage(message)

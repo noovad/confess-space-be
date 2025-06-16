@@ -4,7 +4,7 @@ import (
 	"errors"
 	"go_confess_space-project/api/service"
 	"go_confess_space-project/dto"
-	customerror "go_confess_space-project/helper/customError"
+	customerror "go_confess_space-project/helper/customerrors"
 	"go_confess_space-project/helper/responsejson"
 
 	"github.com/gin-gonic/gin"
@@ -42,7 +42,7 @@ func (c *UserSpaceLastSeenController) CreateOrUpdateLastSeen(ctx *gin.Context) {
 	lastSeen, err := c.UserSpaceLastSeenService.CreateOrUpdateLastSeen(requestBody)
 	if err != nil {
 		if errors.Is(err, customerror.ErrValidation) {
-			responsejson.BadRequest(ctx, err)
+			responsejson.BadRequest(ctx, err, "Validation error")
 			return
 		}
 		responsejson.InternalServerError(ctx, err)

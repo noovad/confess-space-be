@@ -5,7 +5,7 @@ import (
 	"go_confess_space-project/api/service"
 	"go_confess_space-project/dto"
 	"go_confess_space-project/helper"
-	customerror "go_confess_space-project/helper/customError"
+	customerror "go_confess_space-project/helper/customerrors"
 	"go_confess_space-project/helper/responsejson"
 
 	"github.com/gin-gonic/gin"
@@ -32,7 +32,7 @@ func (c *UserSpaceController) AddUserToSpace(ctx *gin.Context) {
 	userSpaceResponse, err := c.userSpaceService.AddUserToSpace(requestBody)
 	if err != nil {
 		if errors.Is(err, customerror.ErrValidation) {
-			responsejson.BadRequest(ctx, err)
+			responsejson.BadRequest(ctx, err, "Validation error")
 			return
 		}
 		responsejson.InternalServerError(ctx, err)

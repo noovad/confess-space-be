@@ -3,7 +3,7 @@ package service
 import (
 	"go_confess_space-project/api/repository"
 	"go_confess_space-project/dto"
-	"go_confess_space-project/helper/customError"
+	customerror "go_confess_space-project/helper/customerrors"
 	"go_confess_space-project/model"
 
 	"github.com/go-playground/validator/v10"
@@ -29,15 +29,15 @@ type UserSpaceServiceImpl struct {
 	Validate            *validator.Validate
 }
 
-func (s *UserSpaceServiceImpl) AddUserToSpace(userSpaceRequest dto.UserSpaceRequest) (model.UserSpace, error) {
-	err := s.Validate.Struct(userSpaceRequest)
+func (s *UserSpaceServiceImpl) AddUserToSpace(req dto.UserSpaceRequest) (model.UserSpace, error) {
+	err := s.Validate.Struct(req)
 	if err != nil {
 		return model.UserSpace{}, customerror.WrapValidation(err)
 	}
 
 	userSpaceModel := model.UserSpace{
-		UserID:  userSpaceRequest.UserID,
-		SpaceID: userSpaceRequest.SpaceID,
+		UserID:  req.UserID,
+		SpaceID: req.SpaceID,
 	}
 
 	return s.UserSpaceRepository.AddUserToSpace(userSpaceModel)

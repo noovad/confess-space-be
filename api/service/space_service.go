@@ -3,7 +3,7 @@ package service
 import (
 	"go_confess_space-project/api/repository"
 	"go_confess_space-project/dto"
-	customerror "go_confess_space-project/helper/customError"
+	customerror "go_confess_space-project/helper/customerrors"
 	"go_confess_space-project/model"
 
 	"github.com/go-playground/validator/v10"
@@ -30,16 +30,16 @@ type SpaceServiceImpl struct {
 	Validate        *validator.Validate
 }
 
-func (t *SpaceServiceImpl) CreateSpace(user dto.CreateSpaceRequest) (model.Space, error) {
-	err := t.Validate.Struct(user)
+func (t *SpaceServiceImpl) CreateSpace(req dto.CreateSpaceRequest) (model.Space, error) {
+	err := t.Validate.Struct(req)
 	if err != nil {
 		return model.Space{}, customerror.WrapValidation(err)
 	}
 
 	spaceModel := model.Space{
-		Name:        user.Name,
-		Description: user.Description,
-		OwnerID:     uuid.MustParse(user.OwnerId),
+		Name:        req.Name,
+		Description: req.Description,
+		OwnerID:     uuid.MustParse(req.OwnerId),
 	}
 
 	return t.SpaceRepository.CreateSpace(spaceModel)
@@ -53,13 +53,13 @@ func (t *SpaceServiceImpl) GetSpaceById(id uuid.UUID) (model.Space, error) {
 	return t.SpaceRepository.GetSpaceById(id)
 }
 
-func (t *SpaceServiceImpl) UpdateSpace(requestBody dto.UpdateSpaceRequest) (model.Space, error) {
-	err := t.Validate.Struct(requestBody)
+func (t *SpaceServiceImpl) UpdateSpace(req dto.UpdateSpaceRequest) (model.Space, error) {
+	err := t.Validate.Struct(req)
 	if err != nil {
 		return model.Space{}, customerror.WrapValidation(err)
 	}
 
-	return t.SpaceRepository.UpdateSpace(requestBody)
+	return t.SpaceRepository.UpdateSpace(req)
 }
 
 func (t *SpaceServiceImpl) DeleteSpace(id uuid.UUID) error {
