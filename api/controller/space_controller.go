@@ -6,6 +6,7 @@ import (
 	"go_confess_space-project/api/service"
 	"go_confess_space-project/dto"
 	"go_confess_space-project/helper"
+	customerror "go_confess_space-project/helper/customError"
 	"go_confess_space-project/helper/responsejson"
 
 	"github.com/gin-gonic/gin"
@@ -30,6 +31,10 @@ func (c *SpaceController) CreateSpace(ctx *gin.Context) {
 
 	space, err := c.spaceService.CreateSpace(requestBody)
 	if err != nil {
+		if errors.Is(err, customerror.ErrValidation) {
+			responsejson.BadRequest(ctx, err)
+			return
+		}
 		responsejson.InternalServerError(ctx, err)
 		return
 	}
@@ -110,6 +115,10 @@ func (c *SpaceController) UpdateSpace(ctx *gin.Context) {
 
 	updatedSpace, err := c.spaceService.UpdateSpace(requestBody)
 	if err != nil {
+		if errors.Is(err, customerror.ErrValidation) {
+			responsejson.BadRequest(ctx, err)
+			return
+		}
 		responsejson.InternalServerError(ctx, err)
 		return
 	}

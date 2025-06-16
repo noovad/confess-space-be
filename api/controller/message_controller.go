@@ -4,6 +4,7 @@ import (
 	"errors"
 	"go_confess_space-project/api/service"
 	"go_confess_space-project/dto"
+	customerror "go_confess_space-project/helper/customError"
 	"go_confess_space-project/helper/responsejson"
 
 	"github.com/gin-gonic/gin"
@@ -27,6 +28,10 @@ func (c *MessageController) CreateMessage(ctx *gin.Context) {
 
 	message, err := c.messageService.CreateMessage(requestBody)
 	if err != nil {
+		if errors.Is(err, customerror.ErrValidation) {
+			responsejson.BadRequest(ctx, err)
+			return
+		}
 		responsejson.InternalServerError(ctx, err)
 		return
 	}

@@ -3,6 +3,7 @@ package service
 import (
 	"go_confess_space-project/api/repository"
 	"go_confess_space-project/dto"
+	"go_confess_space-project/helper/customError"
 	"go_confess_space-project/model"
 
 	"github.com/go-playground/validator/v10"
@@ -32,7 +33,7 @@ func (s *UserSpaceLastSeenServiceImpl) GetLastSeenByUserAndSpace(userID string, 
 
 func (s *UserSpaceLastSeenServiceImpl) CreateOrUpdateLastSeen(request dto.UserSpaceLastSeenRequest) (model.UserSpaceLastSeen, error) {
 	if err := s.Validate.Struct(request); err != nil {
-		return model.UserSpaceLastSeen{}, err
+		return model.UserSpaceLastSeen{}, customerror.WrapValidation(err)
 	}
 
 	requestModel := model.UserSpaceLastSeen{
