@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"fmt"
 	"go_confess_space-project/api/service"
 	"go_confess_space-project/dto"
 	"go_confess_space-project/helper"
@@ -43,7 +42,6 @@ func (c *UserSpaceController) AddUserToSpace(ctx *gin.Context) {
 
 func (c *UserSpaceController) RemoveUserFromSpace(ctx *gin.Context) {
 	spaceIDStr := ctx.Param("spaceID")
-	fmt.Println("Removing user from space with ID:", spaceIDStr)
 	spaceID, err := helper.StringToUUID(spaceIDStr)
 	if err != nil {
 		responsejson.BadRequest(ctx, err)
@@ -51,7 +49,6 @@ func (c *UserSpaceController) RemoveUserFromSpace(ctx *gin.Context) {
 	}
 
 	userIDStr := ctx.Param("userID")
-	fmt.Println("Removing user with ID:", userIDStr)
 	userID, err := helper.StringToUUID(userIDStr)
 	if err != nil {
 		responsejson.BadRequest(ctx, err)
@@ -71,39 +68,32 @@ func (c *UserSpaceController) RemoveUserFromSpace(ctx *gin.Context) {
 
 func (c *UserSpaceController) GetUserSpace(ctx *gin.Context) {
 	spaceIDStr := ctx.Query("spaceId")
-	fmt.Println("GetUserSpace called with spaceId:", spaceIDStr)
 	var spaceID uuid.UUID
 	var err error
 	if spaceIDStr != "" {
 		spaceID, err = helper.StringToUUID(spaceIDStr)
 		if err != nil {
-			fmt.Println("Error parsing spaceId:", err)
 			responsejson.BadRequest(ctx, err)
 			return
 		}
 	}
 
 	userIDStr := ctx.Query("userId")
-	fmt.Println("GetUserSpace called with userId:", userIDStr)
 	var userID uuid.UUID
 	if userIDStr != "" {
 		userID, err = helper.StringToUUID(userIDStr)
 		if err != nil {
-			fmt.Println("Error parsing userId:", err)
 			responsejson.BadRequest(ctx, err)
 			return
 		}
 	}
 
-	fmt.Println("Calling userSpaceService.GetUserSpace with spaceID:", spaceID, "userID:", userID)
 	userSpaces, err := c.userSpaceService.GetUserSpace(spaceID, userID)
 	if err != nil {
-		fmt.Println("Error fetching user spaces:", err)
 		responsejson.InternalServerError(ctx, err)
 		return
 	}
 
-	fmt.Println("User spaces fetched successfully:", userSpaces)
 	ctx.JSON(http.StatusOK, gin.H{
 		"message": "User spaces fetched successfully",
 		"data":    userSpaces,
