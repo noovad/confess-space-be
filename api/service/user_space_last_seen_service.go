@@ -27,11 +27,7 @@ func NewUserSpaceLastSeenServiceImpl(repository repository.UserSpaceLastSeenRepo
 }
 
 func (s *UserSpaceLastSeenServiceImpl) GetLastSeenByUserAndSpace(userID string, spaceID string) (model.UserSpaceLastSeen, error) {
-	lastSeen, err := s.Repository.GetLastSeenByUserAndSpace(userID, spaceID)
-	if err != nil {
-		return model.UserSpaceLastSeen{}, err
-	}
-	return lastSeen, nil
+	return s.Repository.GetLastSeenByUserAndSpace(userID, spaceID)
 }
 
 func (s *UserSpaceLastSeenServiceImpl) CreateOrUpdateLastSeen(request dto.UserSpaceLastSeenRequest) (model.UserSpaceLastSeen, error) {
@@ -45,17 +41,9 @@ func (s *UserSpaceLastSeenServiceImpl) CreateOrUpdateLastSeen(request dto.UserSp
 		LastSeen: request.LastSeen,
 	}
 
-	result, err := s.Repository.CreateOrUpdateLastSeen(requestModel)
-	if err != nil {
-		return model.UserSpaceLastSeen{}, err
-	}
-	return result, nil
+	return s.Repository.CreateOrUpdateLastSeen(requestModel)
 }
 
 func (s *UserSpaceLastSeenServiceImpl) DeleteLastSeenByUserAndSpace(userID string, spaceID string) error {
-	err := s.Repository.DeleteLastSeenByUserAndSpace(userID, spaceID)
-	if err != nil {
-		return err
-	}
-	return nil
+	return s.Repository.DeleteLastSeenByUserAndSpace(userID, spaceID)
 }

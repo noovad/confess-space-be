@@ -39,35 +39,17 @@ func (s *UserSpaceServiceImpl) AddUserToSpace(userSpaceRequest dto.UserSpaceRequ
 		SpaceID: userSpaceRequest.SpaceID,
 	}
 
-	userSpace, err := s.UserSpaceRepository.AddUserToSpace(userSpaceModel)
-	if err != nil {
-		return model.UserSpace{}, err
-	}
-
-	return userSpace, nil
+	return s.UserSpaceRepository.AddUserToSpace(userSpaceModel)
 }
 
 func (s *UserSpaceServiceImpl) RemoveUserFromSpace(spaceID uuid.UUID, userID uuid.UUID) error {
-	err := s.UserSpaceRepository.RemoveUserFromSpace(spaceID, userID)
-	if err != nil {
-		return err
-	}
-	return nil
+	return s.UserSpaceRepository.RemoveUserFromSpace(spaceID, userID)
 }
 
 func (s *UserSpaceServiceImpl) GetUserSpace(spaceID uuid.UUID, userID uuid.UUID) ([]model.UserSpace, error) {
-	userSpaces, err := s.UserSpaceRepository.GetUserSpace(spaceID, userID)
-	if err != nil {
-		return nil, err
-	}
-
-	return userSpaces, nil
+	return s.UserSpaceRepository.GetUserSpace(spaceID, userID)
 }
 
 func (s *UserSpaceServiceImpl) IsUserInSpace(userID, spaceID uuid.UUID) (bool, error) {
-	isInSpace, err := s.UserSpaceRepository.IsUserInSpace(userID, spaceID)
-	if err != nil {
-		return false, err
-	}
-	return isInSpace, nil
+	return s.UserSpaceRepository.IsUserInSpace(userID, spaceID)
 }

@@ -26,7 +26,7 @@ func (r *UserSpaceLastSeenRepositoryImpl) GetLastSeenByUserAndSpace(userID strin
 	result := r.Db.Where("user_id = ? AND space_id = ?", userID, spaceID).First(&lastSeen)
 
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-		return model.UserSpaceLastSeen{}, gorm.ErrRecordNotFound
+		return model.UserSpaceLastSeen{}, nil
 	} else if result.Error != nil {
 		return model.UserSpaceLastSeen{}, result.Error
 	}

@@ -45,36 +45,22 @@ func (t *SpaceServiceImpl) CreateSpace(user dto.CreateSpaceRequest) (model.Space
 }
 
 func (t *SpaceServiceImpl) GetSpaces(limit int, page int, search string) ([]model.Space, error) {
-	spaces, err := t.SpaceRepository.GetSpaces(limit, page, search)
-	if err != nil {
-		return nil, err
-	}
-	return spaces, nil
+	return t.SpaceRepository.GetSpaces(limit, page, search)
 }
-func (t *SpaceServiceImpl) GetSpaceById(id uuid.UUID) (model.Space, error) {
-	space, err := t.SpaceRepository.GetSpaceById(id)
-	if err != nil {
-		return model.Space{}, err
-	}
-	return space, nil
-}
-func (t *SpaceServiceImpl) UpdateSpace(requestBody dto.UpdateSpaceRequest) (model.Space, error) {
 
+func (t *SpaceServiceImpl) GetSpaceById(id uuid.UUID) (model.Space, error) {
+	return t.SpaceRepository.GetSpaceById(id)
+}
+
+func (t *SpaceServiceImpl) UpdateSpace(requestBody dto.UpdateSpaceRequest) (model.Space, error) {
 	err := t.Validate.Struct(requestBody)
 	if err != nil {
 		return model.Space{}, err
 	}
 
-	updatedSpace, err := t.SpaceRepository.UpdateSpace(requestBody)
-	if err != nil {
-		return model.Space{}, err
-	}
-	return updatedSpace, nil
+	return t.SpaceRepository.UpdateSpace(requestBody)
 }
+
 func (t *SpaceServiceImpl) DeleteSpace(id uuid.UUID) error {
-	err := t.SpaceRepository.DeleteSpace(id)
-	if err != nil {
-		return err
-	}
-	return nil
+	return t.SpaceRepository.DeleteSpace(id)
 }
