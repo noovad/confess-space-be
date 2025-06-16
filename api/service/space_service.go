@@ -3,7 +3,6 @@ package service
 import (
 	"go_confess_space-project/api/repository"
 	"go_confess_space-project/dto"
-	"go_confess_space-project/helper"
 	"go_confess_space-project/model"
 
 	"github.com/go-playground/validator/v10"
@@ -33,7 +32,7 @@ type SpaceServiceImpl struct {
 func (t *SpaceServiceImpl) CreateSpace(user dto.CreateSpaceRequest) (model.Space, error) {
 	err := t.Validate.Struct(user)
 	if err != nil {
-		return model.Space{}, helper.ErrFailedValidationWrap(err)
+		return model.Space{}, err
 	}
 
 	spaceModel := model.Space{
@@ -63,7 +62,7 @@ func (t *SpaceServiceImpl) UpdateSpace(requestBody dto.UpdateSpaceRequest) (mode
 
 	err := t.Validate.Struct(requestBody)
 	if err != nil {
-		return model.Space{}, helper.ErrFailedValidationWrap(err)
+		return model.Space{}, err
 	}
 
 	updatedSpace, err := t.SpaceRepository.UpdateSpace(requestBody)
