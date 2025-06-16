@@ -31,7 +31,7 @@ func (c *MessageController) CreateMessage(ctx *gin.Context) {
 		return
 	}
 
-	responsejson.Success(ctx, "create", message)
+	responsejson.Created(ctx, message, "Message created successfully")
 }
 
 func (c *MessageController) GetMessages(ctx *gin.Context) {
@@ -47,5 +47,5 @@ func (c *MessageController) GetMessages(ctx *gin.Context) {
 		return
 	}
 
-	responsejson.Success(ctx, "read", messages)
+	responsejson.Success(ctx, messages, "Messages retrieved successfully")
 }

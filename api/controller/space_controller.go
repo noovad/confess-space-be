@@ -7,7 +7,6 @@ import (
 	"go_confess_space-project/dto"
 	"go_confess_space-project/helper"
 	"go_confess_space-project/helper/responsejson"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -35,10 +34,7 @@ func (c *SpaceController) CreateSpace(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusCreated, gin.H{
-		"message": "Space created successfully",
-		"data":    space,
-	})
+	responsejson.Created(ctx, space, "Space created successfully")
 }
 
 func (c *SpaceController) GetSpaces(ctx *gin.Context) {
@@ -66,10 +62,7 @@ func (c *SpaceController) GetSpaces(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"message": "Spaces retrieved successfully",
-		"data":    spaces,
-	})
+	responsejson.Success(ctx, spaces, "Spaces retrieved successfully")
 }
 
 func (c *SpaceController) GetSpaceById(ctx *gin.Context) {
@@ -91,10 +84,7 @@ func (c *SpaceController) GetSpaceById(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"message": "Space retrieved successfully",
-		"data":    space,
-	})
+	responsejson.Success(ctx, space, "Space retrieved successfully")
 }
 
 func (c *SpaceController) UpdateSpace(ctx *gin.Context) {
@@ -124,10 +114,7 @@ func (c *SpaceController) UpdateSpace(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"message": "Space updated successfully",
-		"data":    updatedSpace,
-	})
+	responsejson.Success(ctx, updatedSpace, "Space updated successfully")
 }
 
 func (c *SpaceController) DeleteSpace(ctx *gin.Context) {
@@ -149,7 +136,5 @@ func (c *SpaceController) DeleteSpace(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"message": "Space deleted successfully",
-	})
+	responsejson.Success(ctx, nil, "Space deleted successfully")
 }

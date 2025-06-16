@@ -5,7 +5,6 @@ import (
 	"go_confess_space-project/dto"
 	"go_confess_space-project/helper"
 	"go_confess_space-project/helper/responsejson"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -34,10 +33,7 @@ func (c *UserSpaceController) AddUserToSpace(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusCreated, gin.H{
-		"message": "User added to space successfully",
-		"data":    userSpaceResponse,
-	})
+	responsejson.Created(ctx, userSpaceResponse, "User added to space successfully")
 }
 
 func (c *UserSpaceController) RemoveUserFromSpace(ctx *gin.Context) {
@@ -61,9 +57,7 @@ func (c *UserSpaceController) RemoveUserFromSpace(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"message": "User removed from space successfully",
-	})
+	responsejson.Success(ctx, nil, "User removed from space successfully")
 }
 
 func (c *UserSpaceController) GetUserSpace(ctx *gin.Context) {
@@ -94,10 +88,7 @@ func (c *UserSpaceController) GetUserSpace(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"message": "User spaces fetched successfully",
-		"data":    userSpaces,
-	})
+	responsejson.Success(ctx, userSpaces, "User spaces fetched successfully")
 }
 
 func (c *UserSpaceController) IsUserInSpace(ctx *gin.Context) {
@@ -122,8 +113,5 @@ func (c *UserSpaceController) IsUserInSpace(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"message": "User in space check completed",
-		"data":    isInSpace,
-	})
+	responsejson.Success(ctx, isInSpace, "User in space check completed")
 }

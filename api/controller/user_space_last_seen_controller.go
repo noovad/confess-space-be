@@ -4,7 +4,6 @@ import (
 	"go_confess_space-project/api/service"
 	"go_confess_space-project/dto"
 	"go_confess_space-project/helper/responsejson"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -28,10 +27,7 @@ func (c *UserSpaceLastSeenController) GetLastSeen(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"message": "Last seen retrieved successfully",
-		"data":    lastSeen,
-	})
+	responsejson.Success(ctx, lastSeen, "Last seen retrieved successfully")
 }
 
 func (c *UserSpaceLastSeenController) CreateOrUpdateLastSeen(ctx *gin.Context) {
@@ -47,10 +43,7 @@ func (c *UserSpaceLastSeenController) CreateOrUpdateLastSeen(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"message": "Last seen created or updated successfully",
-		"data":    lastSeen,
-	})
+	responsejson.Success(ctx, lastSeen, "Last seen created or updated successfully")
 }
 
 func (c *UserSpaceLastSeenController) DeleteLastSeen(ctx *gin.Context) {
@@ -63,7 +56,5 @@ func (c *UserSpaceLastSeenController) DeleteLastSeen(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"message": "Last seen deleted successfully",
-	})
+	responsejson.Success(ctx, nil, "Last seen deleted successfully")
 }
