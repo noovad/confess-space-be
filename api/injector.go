@@ -32,3 +32,14 @@ func UserSpaceInjector() *controller.UserSpaceController {
 	)
 	return nil
 }
+
+func MessageInjector() *controller.MessageController {
+	wire.Build(
+		controller.NewMessageController,
+		service.NewMessageServiceImpl,
+		repository.NewMessageRepositoryImpl,
+		config.Validator,
+		config.DatabaseConnection,
+	)
+	return nil
+}

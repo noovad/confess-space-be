@@ -32,3 +32,12 @@ func UserSpaceInjector() *controller.UserSpaceController {
 	userSpaceController := controller.NewUserSpaceController(userSpaceService)
 	return userSpaceController
 }
+
+func MessageInjector() *controller.MessageController {
+	db := config.DatabaseConnection()
+	messageRepository := repository.NewMessageRepositoryImpl(db)
+	validate := config.Validator()
+	messageService := service.NewMessageServiceImpl(messageRepository, validate)
+	messageController := controller.NewMessageController(messageService)
+	return messageController
+}

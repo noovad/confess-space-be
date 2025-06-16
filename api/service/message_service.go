@@ -1,0 +1,47 @@
+package service
+
+import (
+	"go_confess_space-project/api/repository"
+	"go_confess_space-project/dto"
+	"go_confess_space-project/model"
+
+	"github.com/go-playground/validator/v10"
+)
+
+type MessageService interface {
+	CreateMessage(message dto.MessageRequest) (model.Message, error)
+	GetMessages(spaceID string) ([]model.Message, error)
+}
+
+func NewMessageServiceImpl(messageRepository repository.MessageRepository,
+	validate *validator.Validate,
+) MessageService {
+	return &MessageServiceImpl{
+		MessageRepository: messageRepository,
+		Validate:          validate,
+	}
+}
+
+type MessageServiceImpl struct {
+	MessageRepository repository.MessageRepository
+	Validate          *validator.Validate
+}
+
+func (m *MessageServiceImpl) CreateMessage(MessageRequest dto.MessageRequest) (model.Message, error) {
+	err := m.Validate.Struct(MessageRequest)
+	if err != nil {
+		return model.Message{}, err
+	}
+
+	message := model.Message{
+		SpaceID: MessageRequest.SpaceID,
+		UserID:  MessageRequest.UserID,
+		Content: MessageRequest.Content,
+	}
+
+	return m.MessageRepository.CreateMessage(message)
+}
+
+func (m *MessageServiceImpl) GetMessages(spaceID string) ([]model.Message, error) {
+	return m.MessageRepository.GetMessages(spaceID)
+}
