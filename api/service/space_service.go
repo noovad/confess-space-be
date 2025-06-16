@@ -3,6 +3,7 @@ package service
 import (
 	"go_confess_space-project/api/repository"
 	"go_confess_space-project/dto"
+	"go_confess_space-project/helper"
 	customerror "go_confess_space-project/helper/customerrors"
 	"go_confess_space-project/model"
 
@@ -38,6 +39,7 @@ func (t *SpaceServiceImpl) CreateSpace(req dto.CreateSpaceRequest) (model.Space,
 
 	spaceModel := model.Space{
 		Name:        req.Name,
+		Slug:        helper.ToSlug(req.Name),
 		Description: req.Description,
 		OwnerID:     uuid.MustParse(req.OwnerId),
 	}
