@@ -2,12 +2,14 @@ package controller
 
 import (
 	"errors"
+	"fmt"
 	"go_confess_space-project/api/service"
 	"go_confess_space-project/dto"
 	customerror "go_confess_space-project/helper/customerrors"
 	"go_confess_space-project/helper/responsejson"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 type UserSpaceLastSeenController struct {
@@ -25,6 +27,10 @@ func (c *UserSpaceLastSeenController) GetLastSeen(ctx *gin.Context) {
 
 	lastSeen, err := c.UserSpaceLastSeenService.GetLastSeenByUserAndSpace(userID, spaceID)
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			responsejson.NotFound(ctx, fmt.Sprintf("Last seen for user %s in space %s not found", userID, spaceID))
+			return
+		}
 		responsejson.InternalServerError(ctx, err)
 		return
 	}
@@ -62,6 +68,10 @@ func (c *UserSpaceLastSeenController) DeleteLastSeen(ctx *gin.Context) {
 
 	err := c.UserSpaceLastSeenService.DeleteLastSeenByUserAndSpace(userID, spaceID)
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			responsejson.NotFound(ctx, fmt.Sprintf("Last seen for user %s in space %s not found", userID, spaceID))
+			return
+		}
 		responsejson.InternalServerError(ctx, err)
 		return
 	}

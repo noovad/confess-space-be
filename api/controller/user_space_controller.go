@@ -2,6 +2,7 @@ package controller
 
 import (
 	"errors"
+	"fmt"
 	"go_confess_space-project/api/service"
 	"go_confess_space-project/dto"
 	"go_confess_space-project/helper"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 type UserSpaceController struct {
@@ -63,6 +65,10 @@ func (c *UserSpaceController) RemoveUserFromSpace(ctx *gin.Context) {
 
 	err = c.userSpaceService.RemoveUserFromSpace(spaceID, userID)
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			responsejson.NotFound(ctx, fmt.Sprintf("User %s is not a member of space %s", userID, spaceID))
+			return
+		}
 		responsejson.InternalServerError(ctx, err)
 		return
 	}

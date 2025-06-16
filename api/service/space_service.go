@@ -63,7 +63,12 @@ func (t *SpaceServiceImpl) UpdateSpace(req dto.UpdateSpaceRequest) (model.Space,
 		return model.Space{}, customerror.WrapValidation(err)
 	}
 
-	return t.SpaceRepository.UpdateSpace(req)
+	space := model.Space{
+		Name:        req.Name,
+		Description: req.Description,
+	}
+
+	return t.SpaceRepository.UpdateSpace(req.Id, space)
 }
 
 func (t *SpaceServiceImpl) DeleteSpace(id uuid.UUID) error {

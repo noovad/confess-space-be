@@ -2,8 +2,6 @@ package repository
 
 import (
 	"errors"
-	"fmt"
-	"go_confess_space-project/dto"
 	"go_confess_space-project/model"
 
 	"github.com/google/uuid"
@@ -14,7 +12,7 @@ type SpaceRepository interface {
 	CreateSpace(space model.Space) (model.Space, error)
 	GetSpaces(limit int, page int, search string) ([]model.Space, error)
 	GetSpaceById(id uuid.UUID) (model.Space, error)
-	UpdateSpace(req dto.UpdateSpaceRequest) (model.Space, error)
+	UpdateSpace(id uuid.UUID, space model.Space) (model.Space, error)
 	DeleteSpace(id uuid.UUID) error
 }
 
@@ -67,25 +65,23 @@ func (t *SpaceRepositoryImpl) GetSpaceById(id uuid.UUID) (model.Space, error) {
 	return space, nil
 }
 
-func (t *SpaceRepositoryImpl) UpdateSpace(req dto.UpdateSpaceRequest) (model.Space, error) {
-	var space model.Space
-	fmt.Println("Updating space with ID:", req.Id)
-
-	err := t.Db.First(&space)
-	if errors.Is(err.Error, gorm.ErrRecordNotFound) {
-		return space, gorm.ErrRecordNotFound
-	} else if err.Error != nil {
-		return space, err.Error
-	}
-
-	space.Name = req.Name
-	space.Description = req.Description
-
-	result := t.Db.Save(&space)
+func (t *SpaceRepositoryImpl) UpdateSpace(id uuid.UUID, space model.Space) (model.Space, error) {
+	result := t.Db.Model(&model.Space{}).Where("id = ?", id).Updates(space)
 	if result.Error != nil {
 		return space, result.Error
 	}
-	return space, nil
+
+	if result.RowsAffected == 0 {
+		return space, gorm.ErrRecordNotFound
+	}
+
+	var updatedSpace model.Space
+	err := t.Db.Where("id = ?", id).First(&updatedSpace).Error
+	if err != nil {
+		return space, err
+	}
+
+	return updatedSpace, nil
 }
 
 func (t *SpaceRepositoryImpl) DeleteSpace(id uuid.UUID) error {

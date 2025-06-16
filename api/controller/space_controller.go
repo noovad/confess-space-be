@@ -10,6 +10,7 @@ import (
 	"go_confess_space-project/helper/responsejson"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 type SpaceController struct {
@@ -93,6 +94,10 @@ func (c *SpaceController) GetSpaceById(ctx *gin.Context) {
 
 	space, err := c.spaceService.GetSpaceById(id)
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			responsejson.NotFound(ctx, fmt.Sprintf("space with ID %s not found", spaceId))
+			return
+		}
 		responsejson.InternalServerError(ctx, err)
 		return
 	}
@@ -127,6 +132,10 @@ func (c *SpaceController) UpdateSpace(ctx *gin.Context) {
 			responsejson.BadRequest(ctx, err, "Validation error")
 			return
 		}
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			responsejson.NotFound(ctx, fmt.Sprintf("space with ID %s not found", spaceId))
+			return
+		}
 		responsejson.InternalServerError(ctx, err)
 		return
 	}
@@ -149,6 +158,10 @@ func (c *SpaceController) DeleteSpace(ctx *gin.Context) {
 
 	err = c.spaceService.DeleteSpace(id)
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			responsejson.NotFound(ctx, fmt.Sprintf("space with ID %s not found", spaceId))
+			return
+		}
 		responsejson.InternalServerError(ctx, err)
 		return
 	}
