@@ -40,7 +40,11 @@ func (s *UserSpaceServiceImpl) AddUserToSpace(req dto.UserSpaceRequest) (model.U
 		SpaceID: req.SpaceID,
 	}
 
-	return s.UserSpaceRepository.AddUserToSpace(userSpaceModel)
+	userSpace, err := s.UserSpaceRepository.AddUserToSpace(userSpaceModel)
+	if err != nil {
+		return model.UserSpace{}, customerror.HandlePostgresError(err)
+	}
+	return userSpace, nil
 }
 
 func (s *UserSpaceServiceImpl) RemoveUserFromSpace(spaceID uuid.UUID, userID uuid.UUID) error {

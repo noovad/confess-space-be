@@ -41,7 +41,11 @@ func (m *MessageServiceImpl) CreateMessage(req dto.MessageRequest) (model.Messag
 		Content: req.Content,
 	}
 
-	return m.MessageRepository.CreateMessage(message)
+	createdMessage, err := m.MessageRepository.CreateMessage(message)
+	if err != nil {
+		return model.Message{}, customerror.HandlePostgresError(err)
+	}
+	return createdMessage, nil
 }
 
 func (m *MessageServiceImpl) GetMessages(spaceID string) ([]model.Message, error) {

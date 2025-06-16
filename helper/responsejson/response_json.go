@@ -118,7 +118,7 @@ func NotFound(ctx *gin.Context, message ...string) {
 	})
 }
 
-func Conflict(ctx *gin.Context, message ...string) {
+func Conflict(ctx *gin.Context, err error, message ...string) {
 	msg := "Conflict"
 	if len(message) > 0 && message[0] != "" {
 		msg = message[0]
@@ -127,6 +127,6 @@ func Conflict(ctx *gin.Context, message ...string) {
 		Code:    http.StatusConflict,
 		Status:  "Conflict",
 		Message: msg,
-		Data:    nil,
+		Data:    err.Error(),
 	})
 }

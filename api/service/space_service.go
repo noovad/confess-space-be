@@ -42,7 +42,11 @@ func (t *SpaceServiceImpl) CreateSpace(req dto.CreateSpaceRequest) (model.Space,
 		OwnerID:     uuid.MustParse(req.OwnerId),
 	}
 
-	return t.SpaceRepository.CreateSpace(spaceModel)
+	createdSpace, err := t.SpaceRepository.CreateSpace(spaceModel)
+	if err != nil {
+		return model.Space{}, customerror.HandlePostgresError(err)
+	}
+	return createdSpace, nil
 }
 
 func (t *SpaceServiceImpl) GetSpaces(limit int, page int, search string) ([]model.Space, error) {

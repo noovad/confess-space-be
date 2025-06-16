@@ -32,6 +32,10 @@ func (c *MessageController) CreateMessage(ctx *gin.Context) {
 			responsejson.BadRequest(ctx, err, "Validation error")
 			return
 		}
+		if errors.Is(err, customerror.ErrForeignKeyViolation) {
+			responsejson.BadRequest(ctx, err, "Foreign key violation")
+			return
+		}
 		responsejson.InternalServerError(ctx, err)
 		return
 	}

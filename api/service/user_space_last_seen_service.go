@@ -42,7 +42,11 @@ func (s *UserSpaceLastSeenServiceImpl) CreateOrUpdateLastSeen(req dto.UserSpaceL
 		LastSeen: req.LastSeen,
 	}
 
-	return s.Repository.CreateOrUpdateLastSeen(reqModel)
+	createdOrUpdated, err := s.Repository.CreateOrUpdateLastSeen(reqModel)
+	if err != nil {
+		return model.UserSpaceLastSeen{}, customerror.HandlePostgresError(err)
+	}
+	return createdOrUpdated, nil
 }
 
 func (s *UserSpaceLastSeenServiceImpl) DeleteLastSeenByUserAndSpace(userID string, spaceID string) error {
