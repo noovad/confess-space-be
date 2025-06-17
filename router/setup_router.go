@@ -12,10 +12,6 @@ import (
 func SetupRouter() *gin.Engine {
 	r := gin.Default()
 
-	r.GET("/ping", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"message": "pong"})
-	})
-
 	r.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{os.Getenv("FRONTEND_BASE_URL")},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
@@ -24,7 +20,16 @@ func SetupRouter() *gin.Engine {
 		MaxAge:           12 * time.Hour,
 	}))
 
-	OAuthRoutes(r)
+	r.GET("/ping", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"message": "pong"})
+	})
+
+	apiV1 := r.Group("/api/v1")
+
+	SpaceRoutes(apiV1)
+	UserSpaceRoutes(apiV1)
+	MessageRoutes(apiV1)
+	UserSpaceLastSeenRoutes(apiV1)
 
 	return r
 }

@@ -7,11 +7,12 @@ import (
 )
 
 type Space struct {
-	Id          uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primaryKey"`
-	Name        string    `gorm:"type:varchar(255);unique;not null"`
-	Description string    `gorm:"type:text"`
-	OwnerId     uuid.UUID `gorm:"type:uuid;not null"`
-	Owner       *User     `gorm:"foreignKey:OwnerId;references:Id" json:"owner,omitempty"`
-	CreatedAt   time.Time `gorm:"type:timestamp"`
-	UpdatedAt   time.Time `gorm:"type:timestamp"`
+	ID          uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primaryKey" json:"id"`
+	Name        string    `gorm:"type:varchar(255);unique;not null" json:"name"`
+	Slug        string    `gorm:"type:varchar(255);unique;not null" json:"slug"`
+	Description string    `gorm:"type:text" json:"description"`
+	OwnerID     uuid.UUID `gorm:"type:uuid;not null" json:"owner_id"`
+	Owner       *User     `gorm:"foreignKey:OwnerID;references:ID" json:"owner,omitempty"`
+	CreatedAt   time.Time `gorm:"type:timestamp" json:"created_at"`
+	UpdatedAt   time.Time `gorm:"type:timestamp" json:"updated_at"`
 }

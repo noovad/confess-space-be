@@ -1,0 +1,53 @@
+package service
+
+import (
+	"go_confess_space-project/api/repository"
+	"go_confess_space-project/dto"
+	customerror "go_confess_space-project/helper/customerrors"
+	"go_confess_space-project/model"
+
+	"github.com/go-playground/validator/v10"
+)
+
+type MessageService interface {
+	CreateMessage(message dto.MessageRequest) (model.Message, error)
+	GetMessages(spaceID string) ([]model.Message, error)
+}
+
+func NewMessageServiceImpl(messageRepository repository.MessageRepository,
+	validate *validator.Validate,
+) MessageService {
+	return &MessageServiceImpl{
+		MessageRepository: messageRepository,
+		Validate:          validate,
+	}
+}
+
+type MessageServiceImpl struct {
+	MessageRepository repository.MessageRepository
+	Validate          *validator.Validate
+}
+
+func (m *MessageServiceImpl) CreateMessage(req dto.MessageRequest) (model.Message, error) {
+	err := m.Validate.Struct(req)
+
+	if err != nil {
+		return model.Message{}, customerror.WrapValidation(err)
+	}
+
+	message := model.Message{
+		SpaceID: req.SpaceID,
+		UserID:  req.UserID,
+		Content: req.Content,
+	}
+
+	createdMessage, err := m.MessageRepository.CreateMessage(message)
+	if err != nil {
+		return model.Message{}, customerror.HandlePostgresError(err)
+	}
+	return createdMessage, nil
+}
+
+func (m *MessageServiceImpl) GetMessages(spaceID string) ([]model.Message, error) {
+	return m.MessageRepository.GetMessages(spaceID)
+}

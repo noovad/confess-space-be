@@ -6,12 +6,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func OAuthRoutes(r *gin.Engine) {
+func SpaceRoutes(r *gin.RouterGroup) {
 	// authMidleware := helper.AuthMiddleware
 	SpaceController := api.SpaceInjector()
 
 	{
-		space := r.Group("/api/v1/space")
+		space := r.Group("/space")
 		// space.Use(authMidleware)
 		space.POST("", SpaceController.CreateSpace)
 		space.GET("", SpaceController.GetSpaces)
