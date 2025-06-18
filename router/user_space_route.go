@@ -15,7 +15,7 @@ func UserSpaceRoutes(r *gin.RouterGroup) {
 		space := r.Group("/user-space")
 		space.Use(authMidleware)
 		space.POST("", UserSpaceController.AddUserToSpace)
-		space.DELETE("/:spaceID/:userID", UserSpaceController.RemoveUserFromSpace)
+		space.DELETE("/:spaceID", UserSpaceController.RemoveUserFromSpace)
 		space.GET("", UserSpaceController.GetUserSpace)
 		space.GET("/check/:spaceID/:userID", UserSpaceController.IsUserInSpace)
 	}

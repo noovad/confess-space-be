@@ -10,6 +10,7 @@ import (
 	"go_confess_space-project/helper/responsejson"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -26,11 +27,17 @@ func NewSpaceAuthController(userService service.SpaceService) *SpaceController {
 func (c *SpaceController) CreateSpace(ctx *gin.Context) {
 	var requestBody dto.CreateSpaceRequest
 	if err := ctx.ShouldBindJSON(&requestBody); err != nil {
-		responsejson.BadRequest(ctx, err)
+		responsejson.BadRequest(ctx, err, "Invalid request body")
 		return
 	}
 
-	space, err := c.spaceService.CreateSpace(requestBody)
+	id, valid := helper.ValidateAccessToken(helper.AccessTokenFromHeader(ctx))
+	if !valid {
+		responsejson.Unauthorized(ctx, "Invalid access token")
+		return
+	}
+
+	space, err := c.spaceService.CreateSpace(requestBody, id)
 	if err != nil {
 		if errors.Is(err, customerror.ErrValidation) {
 			responsejson.BadRequest(ctx, err, "Validation error")
@@ -44,7 +51,7 @@ func (c *SpaceController) CreateSpace(ctx *gin.Context) {
 			responsejson.BadRequest(ctx, err, "Foreign key violation")
 			return
 		}
-		responsejson.InternalServerError(ctx, err)
+		responsejson.InternalServerError(ctx, err, "Failed to create space")
 		return
 	}
 
@@ -58,21 +65,21 @@ func (c *SpaceController) GetSpaces(ctx *gin.Context) {
 
 	if limitStr := ctx.Query("limit"); limitStr != "" {
 		if _, err := fmt.Sscanf(limitStr, "%d", &limit); err != nil {
-			responsejson.BadRequest(ctx, errors.New("invalid limit"))
+			responsejson.BadRequest(ctx, err, "invalid limit")
 			return
 		}
 	}
 
 	if pageStr := ctx.Query("page"); pageStr != "" {
 		if _, err := fmt.Sscanf(pageStr, "%d", &page); err != nil {
-			responsejson.BadRequest(ctx, errors.New("invalid page"))
+			responsejson.BadRequest(ctx, err, "invalid page")
 			return
 		}
 	}
 
 	spaces, err := c.spaceService.GetSpaces(limit, page, search)
 	if err != nil {
-		responsejson.InternalServerError(ctx, err)
+		responsejson.InternalServerError(ctx, err, "Failed to retrieve spaces")
 		return
 	}
 
@@ -81,24 +88,16 @@ func (c *SpaceController) GetSpaces(ctx *gin.Context) {
 
 func (c *SpaceController) GetSpaceById(ctx *gin.Context) {
 	spaceId := ctx.Param("id")
-	if spaceId == "" {
-		responsejson.BadRequest(ctx, errors.New("space ID is required"))
-		return
-	}
 
-	id, err := helper.StringToUUID(spaceId)
-	if err != nil {
-		responsejson.BadRequest(ctx, fmt.Errorf("invalid space ID format: %w", err))
-		return
-	}
+	id := uuid.MustParse(spaceId)
 
 	space, err := c.spaceService.GetSpaceById(id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			responsejson.NotFound(ctx, fmt.Sprintf("space with ID %s not found", spaceId))
+			responsejson.NotFound(ctx, "Space Not Found")
 			return
 		}
-		responsejson.InternalServerError(ctx, err)
+		responsejson.InternalServerError(ctx, err, "Failed to retrieve space")
 		return
 	}
 
@@ -114,17 +113,11 @@ func (c *SpaceController) UpdateSpace(ctx *gin.Context) {
 
 	var requestBody dto.UpdateSpaceRequest
 	if err := ctx.ShouldBindJSON(&requestBody); err != nil {
-		responsejson.BadRequest(ctx, err)
+		responsejson.BadRequest(ctx, err, "Invalid request body")
 		return
 	}
 
-	id, err := helper.StringToUUID(spaceId)
-	if err != nil {
-		responsejson.BadRequest(ctx, fmt.Errorf("invalid space ID format: %w", err))
-		return
-	}
-
-	requestBody.Id = id
+	requestBody.Id = uuid.MustParse(spaceId)
 
 	updatedSpace, err := c.spaceService.UpdateSpace(requestBody)
 	if err != nil {
@@ -133,10 +126,10 @@ func (c *SpaceController) UpdateSpace(ctx *gin.Context) {
 			return
 		}
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			responsejson.NotFound(ctx, fmt.Sprintf("space with ID %s not found", spaceId))
+			responsejson.NotFound(ctx, "Space Not Found")
 			return
 		}
-		responsejson.InternalServerError(ctx, err)
+		responsejson.InternalServerError(ctx, err, "Failed to update space")
 		return
 	}
 
@@ -150,19 +143,15 @@ func (c *SpaceController) DeleteSpace(ctx *gin.Context) {
 		return
 	}
 
-	id, err := helper.StringToUUID(spaceId)
-	if err != nil {
-		responsejson.BadRequest(ctx, fmt.Errorf("invalid space ID format: %w", err))
-		return
-	}
+	 id := uuid.MustParse(spaceId)
 
-	err = c.spaceService.DeleteSpace(id)
+	err := c.spaceService.DeleteSpace(id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			responsejson.NotFound(ctx, fmt.Sprintf("space with ID %s not found", spaceId))
+			responsejson.NotFound(ctx, "Space Not Found")
 			return
 		}
-		responsejson.InternalServerError(ctx, err)
+		responsejson.InternalServerError(ctx, err, "Failed to delete space")
 		return
 	}
 

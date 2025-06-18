@@ -4,6 +4,7 @@ import (
 	"errors"
 	"go_confess_space-project/api/service"
 	"go_confess_space-project/dto"
+	"go_confess_space-project/helper"
 	customerror "go_confess_space-project/helper/customerrors"
 	"go_confess_space-project/helper/responsejson"
 
@@ -22,11 +23,17 @@ func NewMessageController(messageService service.MessageService) *MessageControl
 func (c *MessageController) CreateMessage(ctx *gin.Context) {
 	var requestBody dto.MessageRequest
 	if err := ctx.ShouldBindJSON(&requestBody); err != nil {
-		responsejson.BadRequest(ctx, err)
+		responsejson.BadRequest(ctx, err, "Invalid request body")
 		return
 	}
 
-	message, err := c.messageService.CreateMessage(requestBody)
+	id, valid := helper.ValidateAccessToken(helper.AccessTokenFromHeader(ctx))
+	if !valid {
+		responsejson.Unauthorized(ctx, "Invalid access token")
+		return
+	}
+
+	message, err := c.messageService.CreateMessage(requestBody, id)
 	if err != nil {
 		if errors.Is(err, customerror.ErrValidation) {
 			responsejson.BadRequest(ctx, err, "Validation error")
@@ -36,7 +43,7 @@ func (c *MessageController) CreateMessage(ctx *gin.Context) {
 			responsejson.BadRequest(ctx, err, "Foreign key violation")
 			return
 		}
-		responsejson.InternalServerError(ctx, err)
+		responsejson.InternalServerError(ctx, err,  "Failed to create message")
 		return
 	}
 
@@ -52,7 +59,7 @@ func (c *MessageController) GetMessages(ctx *gin.Context) {
 
 	messages, err := c.messageService.GetMessages(spaceID)
 	if err != nil {
-		responsejson.InternalServerError(ctx, err)
+		responsejson.InternalServerError(ctx, err, "Failed to retrieve messages")
 		return
 	}
 

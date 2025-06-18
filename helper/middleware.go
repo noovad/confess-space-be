@@ -5,9 +5,8 @@ import (
 	"fmt"
 	"go_confess_space-project/config"
 	"go_confess_space-project/helper/responsejson"
-	"strings"
-
 	"os"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -15,9 +14,8 @@ import (
 )
 
 func AuthMiddleware(ctx *gin.Context) {
-	accessToken := extractToken(ctx.GetHeader("Authorization"))
-
-	userId, valid := validateAccessToken(accessToken)
+	accessToken := AccessTokenFromHeader(ctx)
+	userId, valid := ValidateAccessToken(accessToken)
 	if valid && ensureUserExists(ctx, userId) {
 		ctx.Set("userId", userId)
 		ctx.Next()
@@ -29,9 +27,9 @@ func AuthMiddleware(ctx *gin.Context) {
 }
 
 func GuestMiddleware(ctx *gin.Context) {
-	accessToken := extractToken(ctx.GetHeader("Authorization"))
+	accessToken := AccessTokenFromHeader(ctx)
 
-	userId, valid := validateAccessToken(accessToken)
+	userId, valid := ValidateAccessToken(accessToken)
 	if valid && ensureUserExists(ctx, userId) {
 		responsejson.Forbidden(ctx, "You are already logged in")
 		ctx.Abort()
@@ -61,7 +59,7 @@ func parseToken(tokenStr, secret string) (*jwt.Token, jwt.MapClaims, error) {
 	return token, claims, nil
 }
 
-func validateAccessToken(tokenStr string) (string, bool) {
+func ValidateAccessToken(tokenStr string) (string, bool) {
 	_, claims, err := parseToken(tokenStr, os.Getenv("GENERATE_TOKEN_SECRET"))
 	if err != nil {
 		fmt.Println("Invalid access token:", err)
@@ -107,9 +105,24 @@ func UserExistsInDatabase(userId string) (bool, error) {
 	return exists, nil
 }
 
-func extractToken(header string) string {
+func ValidateRefreshToken(tokenStr string) (string, bool) {
+	_, claims, err := parseToken(tokenStr, os.Getenv("GENERATE_REFRESH_TOKEN_SECRET"))
+	if err != nil {
+		fmt.Println("Invalid refresh token:", err)
+		return "", false
+	}
+
+	id, ok := claims["id"].(string)
+	if !ok {
+		return "", false
+	}
+	return id, true
+}
+
+func AccessTokenFromHeader(ctx *gin.Context) string {
+	header := ctx.GetHeader("Authorization")
 	if strings.HasPrefix(header, "Bearer ") {
 		return strings.TrimPrefix(header, "Bearer ")
 	}
-	return header
+	return ""
 }

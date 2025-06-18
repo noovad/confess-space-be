@@ -12,7 +12,7 @@ import (
 )
 
 type SpaceService interface {
-	CreateSpace(user dto.CreateSpaceRequest) (model.Space, error)
+	CreateSpace(user dto.CreateSpaceRequest, id string) (model.Space, error)
 	GetSpaces(limit int, page int, search string) ([]model.Space, error)
 	GetSpaceById(id uuid.UUID) (model.Space, error)
 	UpdateSpace(requestBody dto.UpdateSpaceRequest) (model.Space, error)
@@ -31,7 +31,7 @@ type SpaceServiceImpl struct {
 	Validate        *validator.Validate
 }
 
-func (t *SpaceServiceImpl) CreateSpace(req dto.CreateSpaceRequest) (model.Space, error) {
+func (t *SpaceServiceImpl) CreateSpace(req dto.CreateSpaceRequest, id string) (model.Space, error) {
 	err := t.Validate.Struct(req)
 	if err != nil {
 		return model.Space{}, customerror.WrapValidation(err)
@@ -41,7 +41,7 @@ func (t *SpaceServiceImpl) CreateSpace(req dto.CreateSpaceRequest) (model.Space,
 		Name:        req.Name,
 		Slug:        helper.ToSlug(req.Name),
 		Description: req.Description,
-		OwnerID:     uuid.MustParse(req.OwnerId),
+		OwnerID:     uuid.MustParse(id),
 	}
 
 	createdSpace, err := t.SpaceRepository.CreateSpace(spaceModel)
@@ -67,6 +67,7 @@ func (t *SpaceServiceImpl) UpdateSpace(req dto.UpdateSpaceRequest) (model.Space,
 
 	space := model.Space{
 		Name:        req.Name,
+		Slug:        helper.ToSlug(req.Name),
 		Description: req.Description,
 	}
 

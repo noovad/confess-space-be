@@ -12,9 +12,9 @@ import (
 
 type UserSpaceService interface {
 	AddUserToSpace(userSpaceRequest dto.UserSpaceRequest) (model.UserSpace, error)
-	RemoveUserFromSpace(spaceID uuid.UUID, userID uuid.UUID) error
-	GetUserSpace(spaceID uuid.UUID, userID uuid.UUID) ([]model.UserSpace, error)
-	IsUserInSpace(userID, spaceID uuid.UUID) (bool, error)
+	RemoveUserFromSpace(spaceID, userID uuid.UUID) error
+	GetUserSpace(spaceID, userID uuid.UUID) ([]model.UserSpace, error)
+	IsUserInSpace(spaceID, userID uuid.UUID) (bool, error)
 }
 
 func NewUserSpaceServiceImpl(userSpaceRepository repository.UserSpaceRepository, validate *validator.Validate) UserSpaceService {
@@ -51,10 +51,10 @@ func (s *UserSpaceServiceImpl) RemoveUserFromSpace(spaceID uuid.UUID, userID uui
 	return s.UserSpaceRepository.RemoveUserFromSpace(spaceID, userID)
 }
 
-func (s *UserSpaceServiceImpl) GetUserSpace(spaceID uuid.UUID, userID uuid.UUID) ([]model.UserSpace, error) {
+func (s *UserSpaceServiceImpl) GetUserSpace(spaceID, userID uuid.UUID) ([]model.UserSpace, error) {
 	return s.UserSpaceRepository.GetUserSpace(spaceID, userID)
 }
 
-func (s *UserSpaceServiceImpl) IsUserInSpace(userID, spaceID uuid.UUID) (bool, error) {
-	return s.UserSpaceRepository.IsUserInSpace(userID, spaceID)
+func (s *UserSpaceServiceImpl) IsUserInSpace(spaceID, userID uuid.UUID) (bool, error) {
+	return s.UserSpaceRepository.IsUserInSpace(spaceID, userID)
 }

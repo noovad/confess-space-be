@@ -2,7 +2,6 @@ package controller
 
 import (
 	"errors"
-	"fmt"
 	"go_confess_space-project/api/service"
 	"go_confess_space-project/dto"
 	"go_confess_space-project/helper"
@@ -25,13 +24,13 @@ func NewUserSpaceController(userSpaceService service.UserSpaceService) *UserSpac
 }
 
 func (c *UserSpaceController) AddUserToSpace(ctx *gin.Context) {
-	var requestBody dto.UserSpaceRequest
-	if err := ctx.ShouldBindJSON(&requestBody); err != nil {
-		responsejson.BadRequest(ctx, err)
+	var req dto.UserSpaceRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		responsejson.BadRequest(ctx, err, "Invalid request body")
 		return
 	}
 
-	userSpaceResponse, err := c.userSpaceService.AddUserToSpace(requestBody)
+	userSpaceResponse, err := c.userSpaceService.AddUserToSpace(req)
 	if err != nil {
 		if errors.Is(err, customerror.ErrValidation) {
 			responsejson.BadRequest(ctx, err, "Validation error")
@@ -41,7 +40,7 @@ func (c *UserSpaceController) AddUserToSpace(ctx *gin.Context) {
 			responsejson.BadRequest(ctx, err, "Foreign key violation")
 			return
 		}
-		responsejson.InternalServerError(ctx, err)
+		responsejson.InternalServerError(ctx, err, "Failed to add user to space")
 		return
 	}
 
@@ -49,27 +48,21 @@ func (c *UserSpaceController) AddUserToSpace(ctx *gin.Context) {
 }
 
 func (c *UserSpaceController) RemoveUserFromSpace(ctx *gin.Context) {
-	spaceIDStr := ctx.Param("spaceID")
-	spaceID, err := helper.StringToUUID(spaceIDStr)
-	if err != nil {
-		responsejson.BadRequest(ctx, err)
+	spaceID := uuid.MustParse(ctx.Param("spaceID"))
+
+	userID, valid := helper.ValidateAccessToken(helper.AccessTokenFromHeader(ctx))
+	if !valid {
+		responsejson.Unauthorized(ctx, "Invalid access token")
 		return
 	}
 
-	userIDStr := ctx.Param("userID")
-	userID, err := helper.StringToUUID(userIDStr)
-	if err != nil {
-		responsejson.BadRequest(ctx, err)
-		return
-	}
-
-	err = c.userSpaceService.RemoveUserFromSpace(spaceID, userID)
+	err := c.userSpaceService.RemoveUserFromSpace(spaceID, uuid.MustParse(userID))
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			responsejson.NotFound(ctx, fmt.Sprintf("User %s is not a member of space %s", userID, spaceID))
+			responsejson.NotFound(ctx, "User not found in space")
 			return
 		}
-		responsejson.InternalServerError(ctx, err)
+		responsejson.InternalServerError(ctx, err, "Failed to remove user from space")
 		return
 	}
 
@@ -77,30 +70,31 @@ func (c *UserSpaceController) RemoveUserFromSpace(ctx *gin.Context) {
 }
 
 func (c *UserSpaceController) GetUserSpace(ctx *gin.Context) {
-	spaceIDStr := ctx.Query("spaceId")
+	spaceIDParam := ctx.Query("spaceId")
 	var spaceID uuid.UUID
 	var err error
-	if spaceIDStr != "" {
-		spaceID, err = helper.StringToUUID(spaceIDStr)
+	if spaceIDParam != "" {
+		spaceID, err = uuid.Parse(spaceIDParam)
 		if err != nil {
-			responsejson.BadRequest(ctx, err)
+			responsejson.BadRequest(ctx, err, "Invalid spaceId")
 			return
 		}
 	}
 
-	userIDStr := ctx.Query("userId")
+	userIDParam := ctx.Query("userId")
 	var userID uuid.UUID
-	if userIDStr != "" {
-		userID, err = helper.StringToUUID(userIDStr)
+	if userIDParam != "" {
+		userID, err = uuid.Parse(userIDParam)
 		if err != nil {
-			responsejson.BadRequest(ctx, err)
+			responsejson.BadRequest(ctx, err, "Invalid userId")
 			return
 		}
+
 	}
 
 	userSpaces, err := c.userSpaceService.GetUserSpace(spaceID, userID)
 	if err != nil {
-		responsejson.InternalServerError(ctx, err)
+		responsejson.InternalServerError(ctx, err, "Failed to retrieve user space")
 		return
 	}
 
@@ -108,24 +102,12 @@ func (c *UserSpaceController) GetUserSpace(ctx *gin.Context) {
 }
 
 func (c *UserSpaceController) IsUserInSpace(ctx *gin.Context) {
-	userIDStr := ctx.Param("userID")
-	spaceIDStr := ctx.Param("spaceID")
+	spaceID := uuid.MustParse(ctx.Param("spaceID"))
+	userID := uuid.MustParse(ctx.Param("userID"))
 
-	userID, err := uuid.Parse(userIDStr)
+	isInSpace, err := c.userSpaceService.IsUserInSpace(spaceID, userID)
 	if err != nil {
-		responsejson.BadRequest(ctx, err)
-		return
-	}
-
-	spaceID, err := uuid.Parse(spaceIDStr)
-	if err != nil {
-		responsejson.BadRequest(ctx, err)
-		return
-	}
-
-	isInSpace, err := c.userSpaceService.IsUserInSpace(userID, spaceID)
-	if err != nil {
-		responsejson.InternalServerError(ctx, err)
+		responsejson.InternalServerError(ctx, err, "Failed to check if user is in space")
 		return
 	}
 
