@@ -10,7 +10,7 @@ import (
 
 type SpaceRepository interface {
 	CreateSpace(space model.Space) (model.Space, error)
-	GetSpaces(limit int, page int, search string) ([]model.Space, error)
+	GetSpaces(limit int, page int, search string, isSuggest bool, userId string) ([]model.Space, error)
 	GetSpaceById(id uuid.UUID) (model.Space, error)
 	GetSpaceBySlug(slug string) (model.Space, error)
 	UpdateSpace(id uuid.UUID, space model.Space) (model.Space, error)
@@ -39,9 +39,23 @@ func (r *SpaceRepositoryImpl) CreateSpace(space model.Space) (model.Space, error
 	return space, nil
 }
 
-func (t *SpaceRepositoryImpl) GetSpaces(limit int, page int, search string) ([]model.Space, error) {
+func (t *SpaceRepositoryImpl) GetSpaces(limit int, page int, search string, isSuggest bool, userId string) ([]model.Space, error) {
 	var spaces []model.Space
-	query := t.Db.Model(&model.Space{})
+	var userSpaces []model.UserSpace
+	var query *gorm.DB
+	if isSuggest {
+		t.Db.Model(&model.UserSpace{}).Where("user_id = ?", userId).Select("space_id").Scan(&userSpaces)
+		var excludedIDs []uuid.UUID
+		for _, us := range userSpaces {
+			excludedIDs = append(excludedIDs, us.SpaceID)
+		}
+		query = t.Db.Model(&model.Space{})
+		if len(excludedIDs) > 0 {
+			query = query.Where("id NOT IN ?", excludedIDs)
+		}
+	} else {
+		query = t.Db.Model(&model.Space{})
+	}
 	if search != "" {
 		query = query.Where("name ILIKE ?", "%"+search+"%")
 	}

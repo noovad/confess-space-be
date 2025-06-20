@@ -61,6 +61,12 @@ func (c *SpaceController) GetSpaces(ctx *gin.Context) {
 	limit := 10
 	page := 1
 	search := ctx.Query("search")
+	isSuggest := ctx.Query("isSuggest")
+	userId, exists := ctx.Get("userId")
+	if !exists {
+		responsejson.InternalServerError(ctx, nil, "User ID not found in context")
+		return
+	}
 
 	if limitStr := ctx.Query("limit"); limitStr != "" {
 		if _, err := fmt.Sscanf(limitStr, "%d", &limit); err != nil {
@@ -76,7 +82,7 @@ func (c *SpaceController) GetSpaces(ctx *gin.Context) {
 		}
 	}
 
-	spaces, err := c.spaceService.GetSpaces(limit, page, search)
+	spaces, err := c.spaceService.GetSpaces(limit, page, search, isSuggest == "true", userId.(uuid.UUID).String())
 	if err != nil {
 		responsejson.InternalServerError(ctx, err, "Failed to retrieve spaces")
 		return

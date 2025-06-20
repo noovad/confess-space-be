@@ -2,7 +2,6 @@ package controller
 
 import (
 	"errors"
-	"fmt"
 	"go_confess_space-project/api/service"
 	"go_confess_space-project/dto"
 	customerror "go_confess_space-project/helper/customerrors"
@@ -29,8 +28,6 @@ func (c *UserSpaceController) AddUserToSpace(ctx *gin.Context) {
 		responsejson.BadRequest(ctx, err, "Invalid request body")
 		return
 	}
-
-	fmt.Println("Received request to add user to space:", req)
 
 	userSpaceResponse, err := c.userSpaceService.AddUserToSpace(req)
 	if err != nil {

@@ -13,7 +13,7 @@ import (
 
 type SpaceService interface {
 	CreateSpace(user dto.CreateSpaceRequest, id string) (model.Space, error)
-	GetSpaces(limit int, page int, search string) ([]model.Space, error)
+	GetSpaces(limit int, page int, search string, isSuggest bool, userId string) ([]model.Space, error)
 	GetSpaceById(id uuid.UUID) (model.Space, error)
 	GetSpaceBySlug(slug string) (model.Space, error)
 	UpdateSpace(requestBody dto.UpdateSpaceRequest) (model.Space, error)
@@ -52,8 +52,8 @@ func (t *SpaceServiceImpl) CreateSpace(req dto.CreateSpaceRequest, id string) (m
 	return createdSpace, nil
 }
 
-func (t *SpaceServiceImpl) GetSpaces(limit int, page int, search string) ([]model.Space, error) {
-	return t.SpaceRepository.GetSpaces(limit, page, search)
+func (t *SpaceServiceImpl) GetSpaces(limit int, page int, search string, isSuggest bool, userId string) ([]model.Space, error) {
+	return t.SpaceRepository.GetSpaces(limit, page, search, isSuggest, userId)
 }
 
 func (t *SpaceServiceImpl) GetSpaceById(id uuid.UUID) (model.Space, error) {
