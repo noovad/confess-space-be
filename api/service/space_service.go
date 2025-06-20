@@ -15,6 +15,7 @@ type SpaceService interface {
 	CreateSpace(user dto.CreateSpaceRequest, id string) (model.Space, error)
 	GetSpaces(limit int, page int, search string) ([]model.Space, error)
 	GetSpaceById(id uuid.UUID) (model.Space, error)
+	GetSpaceBySlug(slug string) (model.Space, error)
 	UpdateSpace(requestBody dto.UpdateSpaceRequest) (model.Space, error)
 	DeleteSpace(id uuid.UUID) error
 }
@@ -57,6 +58,10 @@ func (t *SpaceServiceImpl) GetSpaces(limit int, page int, search string) ([]mode
 
 func (t *SpaceServiceImpl) GetSpaceById(id uuid.UUID) (model.Space, error) {
 	return t.SpaceRepository.GetSpaceById(id)
+}
+
+func (t *SpaceServiceImpl) GetSpaceBySlug(slug string) (model.Space, error) {
+	return t.SpaceRepository.GetSpaceBySlug(slug)
 }
 
 func (t *SpaceServiceImpl) UpdateSpace(req dto.UpdateSpaceRequest) (model.Space, error) {

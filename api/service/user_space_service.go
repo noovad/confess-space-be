@@ -35,9 +35,18 @@ func (s *UserSpaceServiceImpl) AddUserToSpace(req dto.UserSpaceRequest) (model.U
 		return model.UserSpace{}, customerror.WrapValidation(err)
 	}
 
+	userId, _ := uuid.Parse(req.UserId)
+	spaceId, _ := uuid.Parse(req.SpaceId)
+
 	userSpaceModel := model.UserSpace{
-		UserID:  req.UserID,
-		SpaceID: req.SpaceID,
+		UserID:  userId,
+		SpaceID: spaceId,
+	}
+
+	if exists, err := s.UserSpaceRepository.IsUserInSpace(spaceId, userId); err != nil {
+		return model.UserSpace{}, customerror.HandlePostgresError(err)
+	} else if exists {
+		return model.UserSpace{}, customerror.ErrUserAlreadyInSpace
 	}
 
 	userSpace, err := s.UserSpaceRepository.AddUserToSpace(userSpaceModel)

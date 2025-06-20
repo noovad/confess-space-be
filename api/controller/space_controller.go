@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"go_confess_space-project/api/service"
 	"go_confess_space-project/dto"
-	"go_confess_space-project/helper"
 	customerror "go_confess_space-project/helper/customerrors"
 	"go_confess_space-project/helper/responsejson"
 
@@ -31,13 +30,13 @@ func (c *SpaceController) CreateSpace(ctx *gin.Context) {
 		return
 	}
 
-	id, valid := helper.ValidateAccessToken(helper.AccessTokenFromHeader(ctx))
-	if !valid {
-		responsejson.Unauthorized(ctx, "Invalid access token")
+	userId, exists := ctx.Get("userId")
+	if !exists {
+		responsejson.InternalServerError(ctx, nil, "User ID not found in context")
 		return
 	}
 
-	space, err := c.spaceService.CreateSpace(requestBody, id)
+	space, err := c.spaceService.CreateSpace(requestBody, userId.(string))
 	if err != nil {
 		if errors.Is(err, customerror.ErrValidation) {
 			responsejson.BadRequest(ctx, err, "Validation error")
@@ -104,6 +103,26 @@ func (c *SpaceController) GetSpaceById(ctx *gin.Context) {
 	responsejson.Success(ctx, space, "Space retrieved successfully")
 }
 
+func (c *SpaceController) GetSpaceBySlug(ctx *gin.Context) {
+	slug := ctx.Param("slug")
+	if slug == "" {
+		responsejson.BadRequest(ctx, errors.New("slug is required"))
+		return
+	}
+
+	space, err := c.spaceService.GetSpaceBySlug(slug)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			responsejson.NotFound(ctx, "Space Not Found")
+			return
+		}
+		responsejson.InternalServerError(ctx, err, "Failed to retrieve space")
+		return
+	}
+
+	responsejson.Success(ctx, space, "Space retrieved successfully")
+}
+
 func (c *SpaceController) UpdateSpace(ctx *gin.Context) {
 	spaceId := ctx.Param("id")
 	if spaceId == "" {
@@ -143,7 +162,7 @@ func (c *SpaceController) DeleteSpace(ctx *gin.Context) {
 		return
 	}
 
-	 id := uuid.MustParse(spaceId)
+	id := uuid.MustParse(spaceId)
 
 	err := c.spaceService.DeleteSpace(id)
 	if err != nil {

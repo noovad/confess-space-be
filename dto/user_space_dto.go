@@ -7,14 +7,14 @@ import (
 )
 
 type UserSpaceRequest struct {
-	UserID  uuid.UUID `json:"user_id" validate:"required,uuid"`
-	SpaceID uuid.UUID `json:"space_id" validate:"required,uuid"`
+	UserId  string `json:"user_id" validate:"required"`
+	SpaceId string `json:"space_id" validate:"required"`
 }
 
 type UserSpaceResponse struct {
-	ID        uuid.UUID `json:"id"`
-	UserID    uuid.UUID `json:"user_id"`
-	SpaceID   uuid.UUID `json:"space_id"`
+	Id        uuid.UUID `json:"id"`
+	UserId    uuid.UUID `json:"user_id"`
+	SpaceId   uuid.UUID `json:"space_id"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }

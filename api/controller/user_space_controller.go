@@ -2,9 +2,9 @@ package controller
 
 import (
 	"errors"
+	"fmt"
 	"go_confess_space-project/api/service"
 	"go_confess_space-project/dto"
-	"go_confess_space-project/helper"
 	customerror "go_confess_space-project/helper/customerrors"
 	"go_confess_space-project/helper/responsejson"
 
@@ -30,6 +30,8 @@ func (c *UserSpaceController) AddUserToSpace(ctx *gin.Context) {
 		return
 	}
 
+	fmt.Println("Received request to add user to space:", req)
+
 	userSpaceResponse, err := c.userSpaceService.AddUserToSpace(req)
 	if err != nil {
 		if errors.Is(err, customerror.ErrValidation) {
@@ -40,6 +42,10 @@ func (c *UserSpaceController) AddUserToSpace(ctx *gin.Context) {
 			responsejson.BadRequest(ctx, err, "Foreign key violation")
 			return
 		}
+		if errors.Is(err, customerror.ErrUserAlreadyInSpace) {
+			responsejson.Conflict(ctx, err, "User already in space")
+			return
+		}
 		responsejson.InternalServerError(ctx, err, "Failed to add user to space")
 		return
 	}
@@ -48,15 +54,21 @@ func (c *UserSpaceController) AddUserToSpace(ctx *gin.Context) {
 }
 
 func (c *UserSpaceController) RemoveUserFromSpace(ctx *gin.Context) {
-	spaceID := uuid.MustParse(ctx.Param("spaceID"))
+	spaceID := uuid.MustParse(ctx.Param("spaceId"))
 
-	userID, valid := helper.ValidateAccessToken(helper.AccessTokenFromHeader(ctx))
-	if !valid {
-		responsejson.Unauthorized(ctx, "Invalid access token")
+	userID, exists := ctx.Get("userId")
+	if !exists {
+		responsejson.InternalServerError(ctx, nil, "User ID not found in context")
 		return
 	}
 
-	err := c.userSpaceService.RemoveUserFromSpace(spaceID, uuid.MustParse(userID))
+	uid, ok := userID.(uuid.UUID)
+	if !ok {
+		responsejson.InternalServerError(ctx, nil, "Invalid user ID type")
+		return
+	}
+
+	err := c.userSpaceService.RemoveUserFromSpace(spaceID, uid)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			responsejson.NotFound(ctx, "User not found in space")

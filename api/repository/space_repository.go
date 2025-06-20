@@ -12,6 +12,7 @@ type SpaceRepository interface {
 	CreateSpace(space model.Space) (model.Space, error)
 	GetSpaces(limit int, page int, search string) ([]model.Space, error)
 	GetSpaceById(id uuid.UUID) (model.Space, error)
+	GetSpaceBySlug(slug string) (model.Space, error)
 	UpdateSpace(id uuid.UUID, space model.Space) (model.Space, error)
 	DeleteSpace(id uuid.UUID) error
 }
@@ -56,6 +57,18 @@ func (t *SpaceRepositoryImpl) GetSpaces(limit int, page int, search string) ([]m
 func (t *SpaceRepositoryImpl) GetSpaceById(id uuid.UUID) (model.Space, error) {
 	var space model.Space
 	result := t.Db.Where(id).First(&space)
+
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return space, gorm.ErrRecordNotFound
+	} else if result.Error != nil {
+		return space, result.Error
+	}
+	return space, nil
+}
+
+func (t *SpaceRepositoryImpl) GetSpaceBySlug(slug string) (model.Space, error) {
+	var space model.Space
+	result := t.Db.Where("slug = ?", slug).First(&space)
 
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return space, gorm.ErrRecordNotFound

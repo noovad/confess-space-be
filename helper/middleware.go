@@ -4,33 +4,51 @@ import (
 	"context"
 	"fmt"
 	"go_confess_space-project/config"
+	"go_confess_space-project/dto"
 	"go_confess_space-project/helper/responsejson"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 )
 
 func AuthMiddleware(ctx *gin.Context) {
-	accessToken := AccessTokenFromHeader(ctx)
-	userId, valid := ValidateAccessToken(accessToken)
-	if valid && ensureUserExists(ctx, userId) {
-		ctx.Set("userId", userId)
+	accessToken, _ := ctx.Cookie("access_token")
+	user, valid := ValidateToken(accessToken, os.Getenv("GENERATE_TOKEN_SECRET"))
+	if valid && ensureUserExists(ctx, user.Id.String()) {
+		ctx.Set("userId", user.Id)
 		ctx.Next()
 		return
 	}
 
-	responsejson.Unauthorized(ctx, "Invalid or expired access token")
+	refreshToken, _ := ctx.Cookie("refresh_token")
+	user, refreshValid := ValidateToken(refreshToken, os.Getenv("GENERATE_REFRESH_TOKEN_SECRET"))
+	if refreshValid && ensureUserExists(ctx, user.Id.String()) {
+		newAccessToken := CreateAccessToken(user)
+		SetCookie(ctx.Writer, "access_token", newAccessToken, 60*60*24)
+		ctx.Set("userId", user.Id)
+		ctx.Next()
+		return
+	}
+
+	responsejson.Unauthorized(ctx)
 	ctx.Abort()
 }
 
 func GuestMiddleware(ctx *gin.Context) {
-	accessToken := AccessTokenFromHeader(ctx)
+	accessToken, _ := ctx.Cookie("access_token")
+	user, valid := ValidateToken(accessToken, os.Getenv("GENERATE_TOKEN_SECRET"))
+	if valid && ensureUserExists(ctx, user.Id.String()) {
+		responsejson.Forbidden(ctx, "You are already logged in")
+		ctx.Abort()
+		return
+	}
 
-	userId, valid := ValidateAccessToken(accessToken)
-	if valid && ensureUserExists(ctx, userId) {
+	refreshToken, _ := ctx.Cookie("refresh_token")
+	user, refreshValid := ValidateToken(refreshToken, os.Getenv("GENERATE_REFRESH_TOKEN_SECRET"))
+	if refreshValid && ensureUserExists(ctx, user.Id.String()) {
 		responsejson.Forbidden(ctx, "You are already logged in")
 		ctx.Abort()
 		return
@@ -52,25 +70,27 @@ func parseToken(tokenStr, secret string) (*jwt.Token, jwt.MapClaims, error) {
 		return nil, nil, fmt.Errorf("invalid claims")
 	}
 
-	if exp, ok := claims["exp"].(float64); ok && float64(time.Now().Unix()) > exp {
-		return nil, nil, fmt.Errorf("token expired")
-	}
-
 	return token, claims, nil
 }
 
-func ValidateAccessToken(tokenStr string) (string, bool) {
-	_, claims, err := parseToken(tokenStr, os.Getenv("GENERATE_TOKEN_SECRET"))
+func ValidateToken(tokenStr string, secret string) (dto.UserResponse, bool) {
+	_, claims, err := parseToken(tokenStr, secret)
 	if err != nil {
-		fmt.Println("Invalid access token:", err)
-		return "", false
+		return dto.UserResponse{}, false
 	}
 
 	id, ok := claims["id"].(string)
 	if !ok {
-		return "", false
+		return dto.UserResponse{}, false
 	}
-	return id, true
+	UserResponse := dto.UserResponse{
+		Id:         uuid.MustParse(id),
+		Name:       claims["name"].(string),
+		Username:   claims["username"].(string),
+		Email:      claims["email"].(string),
+		AvatarType: claims["avatar_type"].(string),
+	}
+	return UserResponse, true
 }
 
 func ensureUserExists(ctx *gin.Context, userId string) bool {
@@ -103,26 +123,4 @@ func UserExistsInDatabase(userId string) (bool, error) {
 	}
 
 	return exists, nil
-}
-
-func ValidateRefreshToken(tokenStr string) (string, bool) {
-	_, claims, err := parseToken(tokenStr, os.Getenv("GENERATE_REFRESH_TOKEN_SECRET"))
-	if err != nil {
-		fmt.Println("Invalid refresh token:", err)
-		return "", false
-	}
-
-	id, ok := claims["id"].(string)
-	if !ok {
-		return "", false
-	}
-	return id, true
-}
-
-func AccessTokenFromHeader(ctx *gin.Context) string {
-	header := ctx.GetHeader("Authorization")
-	if strings.HasPrefix(header, "Bearer ") {
-		return strings.TrimPrefix(header, "Bearer ")
-	}
-	return ""
 }

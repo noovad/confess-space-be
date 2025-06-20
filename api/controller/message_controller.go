@@ -4,7 +4,6 @@ import (
 	"errors"
 	"go_confess_space-project/api/service"
 	"go_confess_space-project/dto"
-	"go_confess_space-project/helper"
 	customerror "go_confess_space-project/helper/customerrors"
 	"go_confess_space-project/helper/responsejson"
 
@@ -27,13 +26,13 @@ func (c *MessageController) CreateMessage(ctx *gin.Context) {
 		return
 	}
 
-	id, valid := helper.ValidateAccessToken(helper.AccessTokenFromHeader(ctx))
-	if !valid {
-		responsejson.Unauthorized(ctx, "Invalid access token")
+	userId, exists := ctx.Get("userId")
+	if !exists {
+		responsejson.InternalServerError(ctx, nil, "User ID not found in context")
 		return
 	}
 
-	message, err := c.messageService.CreateMessage(requestBody, id)
+	message, err := c.messageService.CreateMessage(requestBody, userId.(string))
 	if err != nil {
 		if errors.Is(err, customerror.ErrValidation) {
 			responsejson.BadRequest(ctx, err, "Validation error")
@@ -43,7 +42,7 @@ func (c *MessageController) CreateMessage(ctx *gin.Context) {
 			responsejson.BadRequest(ctx, err, "Foreign key violation")
 			return
 		}
-		responsejson.InternalServerError(ctx, err,  "Failed to create message")
+		responsejson.InternalServerError(ctx, err, "Failed to create message")
 		return
 	}
 
