@@ -59,6 +59,9 @@ func (r *UserSpaceRepositoryImpl) GetUserSpace(spaceID uuid.UUID, userID uuid.UU
 
 	result := query.Find(&userSpaces)
 	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return []model.UserSpace{}, nil
+		}
 		return nil, result.Error
 	}
 
