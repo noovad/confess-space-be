@@ -15,9 +15,11 @@ func SpaceRoutes(r *gin.RouterGroup) {
 		space := r.Group("/space")
 		space.Use(authMidleware)
 		space.POST("", SpaceController.CreateSpace)
+		space.GET("/own", SpaceController.GetOwnSpace)
 		space.GET("", SpaceController.GetSpaces)
 		space.GET("/slug/:slug", SpaceController.GetSpaceBySlug)
 		space.PUT("/:id", SpaceController.UpdateSpace)
 		space.DELETE("/:id", SpaceController.DeleteSpace)
+		space.GET("/exists", SpaceController.ExistsByOwnerID)
 	}
 }

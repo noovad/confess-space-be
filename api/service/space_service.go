@@ -13,10 +13,12 @@ import (
 
 type SpaceService interface {
 	CreateSpace(user dto.CreateSpaceRequest, id string) (model.Space, error)
-	GetSpaces(limit int, page int, search string, isSuggest bool, userId string) ([]dto.SpaceResponse, error)
+	GetOwnSpace(ownerID uuid.UUID) (model.Space, error)
+	GetSpaces(limit int, page int, search string, isSuggest bool, userId string) (dto.SpaceListResponse, error)
 	GetSpaceBySlug(slug string) (dto.SpaceResponse, error)
 	UpdateSpace(requestBody dto.UpdateSpaceRequest) (model.Space, error)
 	DeleteSpace(id uuid.UUID) error
+	ExistsByOwnerID(ownerID uuid.UUID) (bool, error)
 }
 
 func NewSpaceServiceImpl(userRepository repository.SpaceRepository, validate *validator.Validate) SpaceService {
@@ -51,13 +53,28 @@ func (t *SpaceServiceImpl) CreateSpace(req dto.CreateSpaceRequest, id string) (m
 	return createdSpace, nil
 }
 
-func (t *SpaceServiceImpl) GetSpaces(limit int, page int, search string, isSuggest bool, userId string) ([]dto.SpaceResponse, error) {
-	return t.SpaceRepository.GetSpaces(limit, page, search, isSuggest, userId)
+func (t *SpaceServiceImpl) GetOwnSpace(ownerID uuid.UUID) (model.Space, error) {
+	space, err := t.SpaceRepository.GetOwnSpace(ownerID)
+	if err != nil {
+		return model.Space{}, customerror.HandlePostgresError(err)
+	}
+	return space, nil
 }
 
+func (t *SpaceServiceImpl) GetSpaces(limit int, page int, search string, isSuggest bool, userId string) (dto.SpaceListResponse, error) {
+	spaces, err := t.SpaceRepository.GetSpaces(limit, page, search, isSuggest, userId)
+	if err != nil {
+		return dto.SpaceListResponse{}, customerror.HandlePostgresError(err)
+	}
+	return spaces, nil
+}
 
 func (t *SpaceServiceImpl) GetSpaceBySlug(slug string) (dto.SpaceResponse, error) {
-	return t.SpaceRepository.GetSpaceBySlug(slug)
+	space, err := t.SpaceRepository.GetSpaceBySlug(slug)
+	if err != nil {
+		return dto.SpaceResponse{}, customerror.HandlePostgresError(err)
+	}
+	return space, nil
 }
 
 func (t *SpaceServiceImpl) UpdateSpace(req dto.UpdateSpaceRequest) (model.Space, error) {
@@ -72,9 +89,25 @@ func (t *SpaceServiceImpl) UpdateSpace(req dto.UpdateSpaceRequest) (model.Space,
 		Description: req.Description,
 	}
 
-	return t.SpaceRepository.UpdateSpace(req.Id, space)
+	updatedSpace, err := t.SpaceRepository.UpdateSpace(req.Id, space)
+	if err != nil {
+		return model.Space{}, customerror.HandlePostgresError(err)
+	}
+	return updatedSpace, nil
 }
 
 func (t *SpaceServiceImpl) DeleteSpace(id uuid.UUID) error {
-	return t.SpaceRepository.DeleteSpace(id)
+	err := t.SpaceRepository.DeleteSpace(id)
+	if err != nil {
+		return customerror.HandlePostgresError(err)
+	}
+	return nil
+}
+
+func (t *SpaceServiceImpl) ExistsByOwnerID(ownerID uuid.UUID) (bool, error) {
+	exists, err := t.SpaceRepository.ExistsByOwnerID(ownerID)
+	if err != nil {
+		return false, customerror.HandlePostgresError(err)
+	}
+	return exists, nil
 }

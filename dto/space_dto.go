@@ -16,12 +16,20 @@ type UpdateSpaceRequest struct {
 }
 
 type SpaceResponse struct {
-	Id          uuid.UUID `json:"id"`
-	Name        string    `json:"name"`
-	Description string    `json:"description"`
-	Slug        string    `json:"slug"`
-	OwnerID     uuid.UUID `json:"owner_id"`
-	MemberCount int       `json:"member_count"`
-	CreatedAt   string    `json:"created_at"`
-	UpdatedAt   string    `json:"updated_at"`
+	Id          string `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Slug        string `json:"slug"`
+	OwnerId     string `json:"owner_id"`
+	MemberCount int    `json:"member_count"`
+	CreatedAt   string `json:"created_at"`
+	UpdatedAt   string `json:"updated_at"`
+}
+
+type SpaceListResponse struct {
+	Spaces []SpaceResponse `json:"spaces"`
+	Total  int              `json:"total"`
+	Limit  int              `json:"limit"`
+	Page   int              `json:"page"`
+	TotalPages int `json:"total_pages"`
 }

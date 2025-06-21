@@ -101,7 +101,7 @@ func ensureUserExists(ctx *gin.Context, userId string) bool {
 		return false
 	}
 	if !exists {
-		responsejson.Unauthorized(ctx, "User not found")
+		responsejson.Unauthorized(ctx)
 		ctx.Abort()
 		return false
 	}

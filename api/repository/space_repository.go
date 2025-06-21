@@ -11,10 +11,12 @@ import (
 
 type SpaceRepository interface {
 	CreateSpace(space model.Space) (model.Space, error)
-	GetSpaces(limit int, page int, search string, isSuggest bool, userId string) ([]dto.SpaceResponse, error)
+	GetOwnSpace(ownerID uuid.UUID) (model.Space, error)
+	GetSpaces(limit int, page int, search string, isSuggest bool, userId string) (dto.SpaceListResponse, error)
 	GetSpaceBySlug(slug string) (dto.SpaceResponse, error)
 	UpdateSpace(id uuid.UUID, space model.Space) (model.Space, error)
 	DeleteSpace(id uuid.UUID) error
+	ExistsByOwnerID(ownerID uuid.UUID) (bool, error)
 }
 
 func NewSpaceRepositoryImpl(Db *gorm.DB) SpaceRepository {
@@ -39,7 +41,16 @@ func (r *SpaceRepositoryImpl) CreateSpace(space model.Space) (model.Space, error
 	return space, nil
 }
 
-func (t *SpaceRepositoryImpl) GetSpaces(limit int, page int, search string, isSuggest bool, userId string) ([]dto.SpaceResponse, error) {
+func (t *SpaceRepositoryImpl) GetOwnSpace(ownerID uuid.UUID) (model.Space, error) {
+	var space model.Space
+	result := t.Db.Where("owner_id = ?", ownerID).First(&space)
+	if result.Error != nil {
+		return model.Space{}, result.Error
+	}
+	return space, nil
+}
+
+func (t *SpaceRepositoryImpl) GetSpaces(limit int, page int, search string, isSuggest bool, userId string) (dto.SpaceListResponse, error) {
 	var spaces []dto.SpaceResponse
 	var userSpaces []model.UserSpace
 	var query *gorm.DB
@@ -51,14 +62,14 @@ func (t *SpaceRepositoryImpl) GetSpaces(limit int, page int, search string, isSu
 			excludedIDs = append(excludedIDs, us.SpaceID)
 		}
 		query = t.Db.Table("spaces s").
-			Select(`s.id, s.name, s.slug, s.description, COUNT(us.user_id) as member_count`).
+			Select(`s.id, s.name, s.slug, s.description, s.owner_id, s.created_at, s.updated_at, COUNT(us.user_id) as member_count`).
 			Joins(`LEFT JOIN user_spaces us ON us.space_id = s.id`)
 		if len(excludedIDs) > 0 {
 			query = query.Where("s.id NOT IN ?", excludedIDs)
 		}
 	} else {
 		query = t.Db.Table("spaces s").
-			Select(`s.id, s.name, s.slug, s.description, COUNT(us.user_id) as member_count`).
+			Select(`s.id, s.name, s.slug, s.description, s.owner_id, s.created_at, s.updated_at, COUNT(us.user_id) as member_count`).
 			Joins(`LEFT JOIN user_spaces us ON us.space_id = s.id`)
 	}
 
@@ -74,24 +85,33 @@ func (t *SpaceRepositoryImpl) GetSpaces(limit int, page int, search string, isSu
 		Scan(&spaces)
 
 	if result.Error != nil {
-		return nil, result.Error
+		return dto.SpaceListResponse{}, result.Error
 	}
 
-	return spaces, nil
+	var total int64
+	t.Db.Model(&model.Space{}).Count(&total)
+
+	response := dto.SpaceListResponse{
+		Spaces:     spaces,
+		Total:      int(total),
+		Limit:      limit,
+		Page:       page,
+		TotalPages: (int(total) + limit - 1) / limit,
+	}
+
+	return response, nil
 }
 
 func (t *SpaceRepositoryImpl) GetSpaceBySlug(slug string) (dto.SpaceResponse, error) {
 	var space dto.SpaceResponse
 	result := t.Db.Table("spaces s").
-		Select(`s.id, s.name, s.slug, s.description, COUNT(us.user_id) as member_count`).
+		Select(`s.id, s.name, s.slug, s.description, s.owner_id, s.created_at, s.updated_at, COUNT(us.user_id) as member_count`).
 		Joins(`LEFT JOIN user_spaces us ON us.space_id = s.id`).
 		Where("s.slug = ?", slug).
 		Group("s.id").
 		First(&space)
 
-	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-		return space, gorm.ErrRecordNotFound
-	} else if result.Error != nil {
+	if result.Error != nil {
 		return space, result.Error
 	}
 	return space, nil
@@ -127,4 +147,13 @@ func (t *SpaceRepositoryImpl) DeleteSpace(id uuid.UUID) error {
 	}
 
 	return nil
+}
+
+func (t *SpaceRepositoryImpl) ExistsByOwnerID(ownerID uuid.UUID) (bool, error) {
+	var count int64
+	err := t.Db.Model(&model.Space{}).Where("owner_id = ?", ownerID).Count(&count).Error
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
 }
