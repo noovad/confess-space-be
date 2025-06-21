@@ -2,7 +2,6 @@ package controller
 
 import (
 	"errors"
-	"fmt"
 	"go_confess_space-project/api/service"
 	"go_confess_space-project/dto"
 	customerror "go_confess_space-project/helper/customerrors"
@@ -28,10 +27,10 @@ func (c *UserSpaceLastSeenController) GetLastSeen(ctx *gin.Context) {
 	lastSeen, err := c.UserSpaceLastSeenService.GetLastSeenByUserAndSpace(userID, spaceID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			responsejson.NotFound(ctx, fmt.Sprintf("Last seen for user %s in space %s not found", userID, spaceID))
+			responsejson.NotFound(ctx, "Last seen Not found")
 			return
 		}
-		responsejson.InternalServerError(ctx, err)
+		responsejson.InternalServerError(ctx, err, "Failed to retrieve last seen")
 		return
 	}
 
@@ -41,7 +40,7 @@ func (c *UserSpaceLastSeenController) GetLastSeen(ctx *gin.Context) {
 func (c *UserSpaceLastSeenController) CreateOrUpdateLastSeen(ctx *gin.Context) {
 	var requestBody dto.UserSpaceLastSeenRequest
 	if err := ctx.ShouldBindJSON(&requestBody); err != nil {
-		responsejson.BadRequest(ctx, err)
+		responsejson.BadRequest(ctx, err, "Invalid request body")
 		return
 	}
 
@@ -55,7 +54,7 @@ func (c *UserSpaceLastSeenController) CreateOrUpdateLastSeen(ctx *gin.Context) {
 			responsejson.BadRequest(ctx, err, "Foreign key violation")
 			return
 		}
-		responsejson.InternalServerError(ctx, err)
+		responsejson.InternalServerError(ctx, err, "Failed to create or update last seen")
 		return
 	}
 
@@ -69,10 +68,10 @@ func (c *UserSpaceLastSeenController) DeleteLastSeen(ctx *gin.Context) {
 	err := c.UserSpaceLastSeenService.DeleteLastSeenByUserAndSpace(userID, spaceID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			responsejson.NotFound(ctx, fmt.Sprintf("Last seen for user %s in space %s not found", userID, spaceID))
+			responsejson.NotFound(ctx, "Last seen Not found")
 			return
 		}
-		responsejson.InternalServerError(ctx, err)
+		responsejson.InternalServerError(ctx, err, "Failed to delete last seen")
 		return
 	}
 

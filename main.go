@@ -13,11 +13,13 @@ import (
 )
 
 func main() {
-	if err := godotenv.Load(); err != nil {
-		log.Fatal("Error loading .env file")
+	err := godotenv.Load()
+	if err != nil {
+		log.Println("No .env file found or failed to load it, skipping...")
 	}
 
 	db := config.DatabaseConnection()
+	defer config.CloseDB()
 	if db == nil {
 		log.Fatal("Database connection failed")
 	}

@@ -2,6 +2,7 @@ package repository
 
 import (
 	"errors"
+	"go_confess_space-project/dto"
 	"go_confess_space-project/model"
 
 	"github.com/google/uuid"
@@ -10,10 +11,12 @@ import (
 
 type SpaceRepository interface {
 	CreateSpace(space model.Space) (model.Space, error)
-	GetSpaces(limit int, page int, search string) ([]model.Space, error)
-	GetSpaceById(id uuid.UUID) (model.Space, error)
+	GetOwnSpace(ownerID uuid.UUID) (model.Space, error)
+	GetSpaces(limit int, page int, search string, isSuggest bool, userId string) (dto.SpaceListResponse, error)
+	GetSpaceBySlug(slug string) (dto.SpaceResponse, error)
 	UpdateSpace(id uuid.UUID, space model.Space) (model.Space, error)
 	DeleteSpace(id uuid.UUID) error
+	ExistsByOwnerID(ownerID uuid.UUID) (bool, error)
 }
 
 func NewSpaceRepositoryImpl(Db *gorm.DB) SpaceRepository {
@@ -38,28 +41,77 @@ func (r *SpaceRepositoryImpl) CreateSpace(space model.Space) (model.Space, error
 	return space, nil
 }
 
-func (t *SpaceRepositoryImpl) GetSpaces(limit int, page int, search string) ([]model.Space, error) {
-	var spaces []model.Space
-	query := t.Db.Model(&model.Space{})
-	if search != "" {
-		query = query.Where("name ILIKE ?", "%"+search+"%")
-	}
-	offset := (page - 1) * limit
-	result := query.Limit(limit).Offset(offset).Find(&spaces)
-
+func (t *SpaceRepositoryImpl) GetOwnSpace(ownerID uuid.UUID) (model.Space, error) {
+	var space model.Space
+	result := t.Db.Where("owner_id = ?", ownerID).First(&space)
 	if result.Error != nil {
-		return nil, result.Error
+		return model.Space{}, result.Error
 	}
-	return spaces, nil
+	return space, nil
 }
 
-func (t *SpaceRepositoryImpl) GetSpaceById(id uuid.UUID) (model.Space, error) {
-	var space model.Space
-	result := t.Db.Where(id).First(&space)
+func (t *SpaceRepositoryImpl) GetSpaces(limit int, page int, search string, isSuggest bool, userId string) (dto.SpaceListResponse, error) {
+	var spaces []dto.SpaceResponse
+	var userSpaces []model.UserSpace
+	var query *gorm.DB
 
-	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-		return space, gorm.ErrRecordNotFound
-	} else if result.Error != nil {
+	if isSuggest {
+		t.Db.Model(&model.UserSpace{}).Where("user_id = ?", userId).Select("space_id").Scan(&userSpaces)
+		var excludedIDs []uuid.UUID
+		for _, us := range userSpaces {
+			excludedIDs = append(excludedIDs, us.SpaceID)
+		}
+		query = t.Db.Table("spaces s").
+			Select(`s.id, s.name, s.slug, s.description, s.owner_id, s.created_at, s.updated_at, COUNT(us.user_id) as member_count`).
+			Joins(`LEFT JOIN user_spaces us ON us.space_id = s.id`)
+		if len(excludedIDs) > 0 {
+			query = query.Where("s.id NOT IN ?", excludedIDs)
+		}
+	} else {
+		query = t.Db.Table("spaces s").
+			Select(`s.id, s.name, s.slug, s.description, s.owner_id, s.created_at, s.updated_at, COUNT(us.user_id) as member_count`).
+			Joins(`LEFT JOIN user_spaces us ON us.space_id = s.id`)
+	}
+
+	if search != "" {
+		query = query.Where("s.name ILIKE ?", "%"+search+"%")
+	}
+
+	offset := (page - 1) * limit
+	result := query.
+		Group("s.id").
+		Limit(limit).
+		Offset(offset).
+		Scan(&spaces)
+
+	if result.Error != nil {
+		return dto.SpaceListResponse{}, result.Error
+	}
+
+	var total int64
+	t.Db.Model(&model.Space{}).Count(&total)
+
+	response := dto.SpaceListResponse{
+		Spaces:     spaces,
+		Total:      int(total),
+		Limit:      limit,
+		Page:       page,
+		TotalPages: (int(total) + limit - 1) / limit,
+	}
+
+	return response, nil
+}
+
+func (t *SpaceRepositoryImpl) GetSpaceBySlug(slug string) (dto.SpaceResponse, error) {
+	var space dto.SpaceResponse
+	result := t.Db.Table("spaces s").
+		Select(`s.id, s.name, s.slug, s.description, s.owner_id, s.created_at, s.updated_at, COUNT(us.user_id) as member_count`).
+		Joins(`LEFT JOIN user_spaces us ON us.space_id = s.id`).
+		Where("s.slug = ?", slug).
+		Group("s.id").
+		First(&space)
+
+	if result.Error != nil {
 		return space, result.Error
 	}
 	return space, nil
@@ -95,4 +147,13 @@ func (t *SpaceRepositoryImpl) DeleteSpace(id uuid.UUID) error {
 	}
 
 	return nil
+}
+
+func (t *SpaceRepositoryImpl) ExistsByOwnerID(ownerID uuid.UUID) (bool, error) {
+	var count int64
+	err := t.Db.Model(&model.Space{}).Where("owner_id = ?", ownerID).Count(&count).Error
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
 }

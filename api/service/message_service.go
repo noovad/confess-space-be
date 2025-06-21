@@ -7,10 +7,11 @@ import (
 	"go_confess_space-project/model"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/google/uuid"
 )
 
 type MessageService interface {
-	CreateMessage(message dto.MessageRequest) (model.Message, error)
+	CreateMessage(message dto.MessageRequest, id string) (model.Message, error)
 	GetMessages(spaceID string) ([]model.Message, error)
 }
 
@@ -28,7 +29,7 @@ type MessageServiceImpl struct {
 	Validate          *validator.Validate
 }
 
-func (m *MessageServiceImpl) CreateMessage(req dto.MessageRequest) (model.Message, error) {
+func (m *MessageServiceImpl) CreateMessage(req dto.MessageRequest, id string) (model.Message, error) {
 	err := m.Validate.Struct(req)
 
 	if err != nil {
@@ -37,7 +38,7 @@ func (m *MessageServiceImpl) CreateMessage(req dto.MessageRequest) (model.Messag
 
 	message := model.Message{
 		SpaceID: req.SpaceID,
-		UserID:  req.UserID,
+		UserID:  uuid.MustParse(id),
 		Content: req.Content,
 	}
 

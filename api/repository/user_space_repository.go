@@ -9,9 +9,9 @@ import (
 
 type UserSpaceRepository interface {
 	AddUserToSpace(userSpace model.UserSpace) (model.UserSpace, error)
-	RemoveUserFromSpace(spacID uuid.UUID, userID uuid.UUID) error
-	GetUserSpace(spaceID uuid.UUID, userID uuid.UUID) ([]model.UserSpace, error)
-	IsUserInSpace(userID, spaceID uuid.UUID) (bool, error)
+	RemoveUserFromSpace(spacID, userID uuid.UUID) error
+	GetUserSpace(spaceID, userID uuid.UUID) ([]model.UserSpace, error)
+	IsUserInSpace(spaceID, userID uuid.UUID) (bool, error)
 }
 
 func NewUserSpaceRepositoryImpl(Db *gorm.DB) UserSpaceRepository {
@@ -65,15 +65,15 @@ func (r *UserSpaceRepositoryImpl) GetUserSpace(spaceID uuid.UUID, userID uuid.UU
 	return userSpaces, nil
 }
 
-func (r *UserSpaceRepositoryImpl) IsUserInSpace(userID, spaceID uuid.UUID) (bool, error) {
-	result := r.Db.Where("user_ID = ? AND space_ID = ?", userID, spaceID).First(&model.UserSpace{})
+func (r *UserSpaceRepositoryImpl) IsUserInSpace(spaceID, userID uuid.UUID) (bool, error) {
+	result := r.Db.Where("space_ID = ? AND  user_ID = ?", spaceID, userID).First(&model.UserSpace{})
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
 			return false, nil
 		}
 		return false, result.Error
 	}
-	
+
 	if result.RowsAffected > 0 {
 		return true, nil
 	}

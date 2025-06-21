@@ -1,49 +1,39 @@
 package responsejson
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
 type Response struct {
-	Code    int         `json:"code"`
-	Status  string      `json:"status"`
-	Message string      `json:"message"`
-	Data    interface{} `json:"data"`
+	Success bool   `json:"success"`
+	Message string `json:"message"`
+	Data    any    `json:"data,omitempty"`
+	Errors  any    `json:"errors,omitempty"`
 }
 
-// Success mengirim response sukses dengan message default atau custom
-func Success(ctx *gin.Context, data interface{}, message ...string) {
-	code := http.StatusOK
-	status := "OK"
+func Success(ctx *gin.Context, data any, message ...string) {
 	msg := "Success"
-
 	if len(message) > 0 && message[0] != "" {
 		msg = message[0]
 	}
 
-	ctx.JSON(code, Response{
-		Code:    code,
-		Status:  status,
+	ctx.JSON(http.StatusOK, Response{
+		Success: true,
 		Message: msg,
 		Data:    data,
 	})
 }
 
-func Created(ctx *gin.Context, data interface{}, message ...string) {
-	code := http.StatusCreated
-	status := "Created"
+func Created(ctx *gin.Context, data any, message ...string) {
 	msg := "Resource created successfully"
-
 	if len(message) > 0 && message[0] != "" {
 		msg = message[0]
 	}
 
-	ctx.JSON(code, Response{
-		Code:    code,
-		Status:  status,
+	ctx.JSON(http.StatusCreated, Response{
+		Success: true,
 		Message: msg,
 		Data:    data,
 	})
@@ -55,10 +45,8 @@ func Unauthorized(ctx *gin.Context, message ...string) {
 		msg = message[0]
 	}
 	ctx.JSON(http.StatusUnauthorized, Response{
-		Code:    http.StatusUnauthorized,
-		Status:  "Unauthorized",
+		Success: false,
 		Message: msg,
-		Data:    nil,
 	})
 }
 
@@ -68,27 +56,21 @@ func InternalServerError(ctx *gin.Context, err error, message ...string) {
 		msg = message[0]
 	}
 	ctx.JSON(http.StatusInternalServerError, Response{
-		Code:    http.StatusInternalServerError,
-		Status:  "Internal Server Error",
+		Success: false,
 		Message: msg,
-		Data:    err.Error(),
+		Errors:  err.Error(),
 	})
 }
 
 func BadRequest(ctx *gin.Context, err error, message ...string) {
 	msg := "Bad Request"
-	fmt.Println("Bad Request:", err.Error())
-	fmt.Println("Bad Request message slice:", message)
 	if len(message) > 0 && message[0] != "" {
-		fmt.Println("Bad Request custom message:", message[0])
 		msg = message[0]
 	}
-	fmt.Println("Bad Request final message:", msg)
 	ctx.JSON(http.StatusBadRequest, Response{
-		Code:    http.StatusBadRequest,
-		Status:  "Bad Request",
+		Success: false,
 		Message: msg,
-		Data:    err.Error(),
+		Errors:  err.Error(),
 	})
 }
 
@@ -98,10 +80,8 @@ func Forbidden(ctx *gin.Context, message ...string) {
 		msg = message[0]
 	}
 	ctx.JSON(http.StatusForbidden, Response{
-		Code:    http.StatusForbidden,
-		Status:  "Forbidden",
+		Success: false,
 		Message: msg,
-		Data:    nil,
 	})
 }
 
@@ -111,10 +91,8 @@ func NotFound(ctx *gin.Context, message ...string) {
 		msg = message[0]
 	}
 	ctx.JSON(http.StatusNotFound, Response{
-		Code:    http.StatusNotFound,
-		Status:  "Not Found",
+		Success: false,
 		Message: msg,
-		Data:    nil,
 	})
 }
 
@@ -124,9 +102,8 @@ func Conflict(ctx *gin.Context, err error, message ...string) {
 		msg = message[0]
 	}
 	ctx.JSON(http.StatusConflict, Response{
-		Code:    http.StatusConflict,
-		Status:  "Conflict",
+		Success: false,
 		Message: msg,
-		Data:    err.Error(),
+		Errors:  err.Error(),
 	})
 }
