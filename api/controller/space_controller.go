@@ -126,8 +126,6 @@ func (c *SpaceController) GetSpaceBySlug(ctx *gin.Context) {
 	space, err := c.spaceService.GetSpaceBySlug(slug)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			println("Space not found:", err)
-
 			responsejson.NotFound(ctx, "Space Not Found")
 			return
 		}

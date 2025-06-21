@@ -30,15 +30,20 @@ func main() {
 
 	r := router.SetupRouter()
 
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8000"
+	}
+
 	server := &http.Server{
-		Addr:           ":" + os.Getenv("PORT"),
+		Addr:           ":" + port,
 		Handler:        r,
 		ReadTimeout:    10 * time.Second,
 		WriteTimeout:   10 * time.Second,
 		MaxHeaderBytes: 1 << 20,
 	}
 
-	log.Println("Server running on port", os.Getenv("PORT"))
+	log.Println("Server running on port", port)
 	if err := server.ListenAndServe(); err != nil {
 		log.Fatal("Server error:", err)
 	}

@@ -2,9 +2,9 @@ package router
 
 import (
 	"go_confess_space-project/api"
-	"go_confess_space-project/helper"
 
 	"github.com/gin-gonic/gin"
+	"github.com/noovad/go-auth/helper"
 )
 
 func MessageRoutes(r *gin.RouterGroup) {

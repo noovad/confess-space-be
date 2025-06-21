@@ -45,6 +45,9 @@ func (t *SpaceRepositoryImpl) GetOwnSpace(ownerID uuid.UUID) (model.Space, error
 	var space model.Space
 	result := t.Db.Where("owner_id = ?", ownerID).First(&space)
 	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return model.Space{}, nil
+		}
 		return model.Space{}, result.Error
 	}
 	return space, nil
@@ -85,6 +88,9 @@ func (t *SpaceRepositoryImpl) GetSpaces(limit int, page int, search string, isSu
 		Scan(&spaces)
 
 	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return dto.SpaceListResponse{}, nil
+		}
 		return dto.SpaceListResponse{}, result.Error
 	}
 

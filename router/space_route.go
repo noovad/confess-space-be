@@ -2,18 +2,18 @@ package router
 
 import (
 	"go_confess_space-project/api"
-	"go_confess_space-project/helper"
 
 	"github.com/gin-gonic/gin"
+	"github.com/noovad/go-auth/helper"
 )
 
 func SpaceRoutes(r *gin.RouterGroup) {
-	authMidleware := helper.AuthMiddleware
+	authMiddleware := helper.AuthMiddleware
 	SpaceController := api.SpaceInjector()
 
 	{
 		space := r.Group("/space")
-		space.Use(authMidleware)
+		space.Use(authMiddleware)
 		space.POST("", SpaceController.CreateSpace)
 		space.GET("/own", SpaceController.GetOwnSpace)
 		space.GET("", SpaceController.GetSpaces)
