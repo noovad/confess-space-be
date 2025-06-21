@@ -16,7 +16,6 @@ func SpaceRoutes(r *gin.RouterGroup) {
 		space.Use(authMidleware)
 		space.POST("", SpaceController.CreateSpace)
 		space.GET("", SpaceController.GetSpaces)
-		space.GET("/:id", SpaceController.GetSpaceById)
 		space.GET("/slug/:slug", SpaceController.GetSpaceBySlug)
 		space.PUT("/:id", SpaceController.UpdateSpace)
 		space.DELETE("/:id", SpaceController.DeleteSpace)

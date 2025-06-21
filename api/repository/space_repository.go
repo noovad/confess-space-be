@@ -2,6 +2,7 @@ package repository
 
 import (
 	"errors"
+	"go_confess_space-project/dto"
 	"go_confess_space-project/model"
 
 	"github.com/google/uuid"
@@ -10,9 +11,8 @@ import (
 
 type SpaceRepository interface {
 	CreateSpace(space model.Space) (model.Space, error)
-	GetSpaces(limit int, page int, search string, isSuggest bool, userId string) ([]model.Space, error)
-	GetSpaceById(id uuid.UUID) (model.Space, error)
-	GetSpaceBySlug(slug string) (model.Space, error)
+	GetSpaces(limit int, page int, search string, isSuggest bool, userId string) ([]dto.SpaceResponse, error)
+	GetSpaceBySlug(slug string) (dto.SpaceResponse, error)
 	UpdateSpace(id uuid.UUID, space model.Space) (model.Space, error)
 	DeleteSpace(id uuid.UUID) error
 }
@@ -39,50 +39,55 @@ func (r *SpaceRepositoryImpl) CreateSpace(space model.Space) (model.Space, error
 	return space, nil
 }
 
-func (t *SpaceRepositoryImpl) GetSpaces(limit int, page int, search string, isSuggest bool, userId string) ([]model.Space, error) {
-	var spaces []model.Space
+func (t *SpaceRepositoryImpl) GetSpaces(limit int, page int, search string, isSuggest bool, userId string) ([]dto.SpaceResponse, error) {
+	var spaces []dto.SpaceResponse
 	var userSpaces []model.UserSpace
 	var query *gorm.DB
+
 	if isSuggest {
 		t.Db.Model(&model.UserSpace{}).Where("user_id = ?", userId).Select("space_id").Scan(&userSpaces)
 		var excludedIDs []uuid.UUID
 		for _, us := range userSpaces {
 			excludedIDs = append(excludedIDs, us.SpaceID)
 		}
-		query = t.Db.Model(&model.Space{})
+		query = t.Db.Table("spaces s").
+			Select(`s.id, s.name, s.slug, s.description, COUNT(us.user_id) as member_count`).
+			Joins(`LEFT JOIN user_spaces us ON us.space_id = s.id`)
 		if len(excludedIDs) > 0 {
-			query = query.Where("id NOT IN ?", excludedIDs)
+			query = query.Where("s.id NOT IN ?", excludedIDs)
 		}
 	} else {
-		query = t.Db.Model(&model.Space{})
+		query = t.Db.Table("spaces s").
+			Select(`s.id, s.name, s.slug, s.description, COUNT(us.user_id) as member_count`).
+			Joins(`LEFT JOIN user_spaces us ON us.space_id = s.id`)
 	}
+
 	if search != "" {
-		query = query.Where("name ILIKE ?", "%"+search+"%")
+		query = query.Where("s.name ILIKE ?", "%"+search+"%")
 	}
+
 	offset := (page - 1) * limit
-	result := query.Limit(limit).Offset(offset).Find(&spaces)
+	result := query.
+		Group("s.id").
+		Limit(limit).
+		Offset(offset).
+		Scan(&spaces)
 
 	if result.Error != nil {
 		return nil, result.Error
 	}
+
 	return spaces, nil
 }
 
-func (t *SpaceRepositoryImpl) GetSpaceById(id uuid.UUID) (model.Space, error) {
-	var space model.Space
-	result := t.Db.Where(id).First(&space)
-
-	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-		return space, gorm.ErrRecordNotFound
-	} else if result.Error != nil {
-		return space, result.Error
-	}
-	return space, nil
-}
-
-func (t *SpaceRepositoryImpl) GetSpaceBySlug(slug string) (model.Space, error) {
-	var space model.Space
-	result := t.Db.Where("slug = ?", slug).First(&space)
+func (t *SpaceRepositoryImpl) GetSpaceBySlug(slug string) (dto.SpaceResponse, error) {
+	var space dto.SpaceResponse
+	result := t.Db.Table("spaces s").
+		Select(`s.id, s.name, s.slug, s.description, COUNT(us.user_id) as member_count`).
+		Joins(`LEFT JOIN user_spaces us ON us.space_id = s.id`).
+		Where("s.slug = ?", slug).
+		Group("s.id").
+		First(&space)
 
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return space, gorm.ErrRecordNotFound

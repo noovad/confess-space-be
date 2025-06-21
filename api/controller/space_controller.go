@@ -91,24 +91,6 @@ func (c *SpaceController) GetSpaces(ctx *gin.Context) {
 	responsejson.Success(ctx, spaces, "Spaces retrieved successfully")
 }
 
-func (c *SpaceController) GetSpaceById(ctx *gin.Context) {
-	spaceId := ctx.Param("id")
-
-	id := uuid.MustParse(spaceId)
-
-	space, err := c.spaceService.GetSpaceById(id)
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			responsejson.NotFound(ctx, "Space Not Found")
-			return
-		}
-		responsejson.InternalServerError(ctx, err, "Failed to retrieve space")
-		return
-	}
-
-	responsejson.Success(ctx, space, "Space retrieved successfully")
-}
-
 func (c *SpaceController) GetSpaceBySlug(ctx *gin.Context) {
 	slug := ctx.Param("slug")
 	if slug == "" {
@@ -119,6 +101,8 @@ func (c *SpaceController) GetSpaceBySlug(ctx *gin.Context) {
 	space, err := c.spaceService.GetSpaceBySlug(slug)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
+			println("Space not found:", err)
+
 			responsejson.NotFound(ctx, "Space Not Found")
 			return
 		}
