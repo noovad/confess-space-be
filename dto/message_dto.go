@@ -1,8 +1,6 @@
 package dto
 
-import "github.com/google/uuid"
-
 type MessageRequest struct {
-	SpaceID uuid.UUID `json:"space_id" validate:"required,uuid"`
-	Content string    `json:"content" validate:"required"`
+	SpaceID string `json:"space_id" validate:"required"`
+	Message string `json:"message" validate:"required"`
 }

@@ -7,12 +7,12 @@ import (
 )
 
 type User struct {
-	ID         uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primaryKey"`
-	Username   string    `gorm:"type:varchar(255);unique;not null"`
-	Name       string    `gorm:"type:varchar(255)"`
-	Email      string    `gorm:"type:varchar(255);unique"`
-	AvatarType string    `gorm:"type:varchar(255)"`
-	Password   string    `gorm:"type:varchar(255)"`
-	CreatedAt  time.Time `gorm:"type:timestamp"`
-	UpdatedAt  time.Time `gorm:"type:timestamp"`
+	ID         uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primaryKey" json:"id"`
+	Username   string    `gorm:"type:varchar(255);unique;not null" json:"username"`
+	Name       string    `gorm:"type:varchar(255)" json:"name"`
+	Email      string    `gorm:"type:varchar(255);unique" json:"email"`
+	AvatarType string    `gorm:"type:varchar(255)" json:"avatar_type"`
+	Password   string    `gorm:"type:varchar(255)" json:"password"`
+	CreatedAt  time.Time `gorm:"type:timestamp" json:"created_at"`
+	UpdatedAt  time.Time `gorm:"type:timestamp" json:"updated_at"`
 }

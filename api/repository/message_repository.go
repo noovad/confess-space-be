@@ -30,7 +30,12 @@ func (r *MessageRepositoryImpl) CreateMessage(message model.Message) (model.Mess
 
 func (r *MessageRepositoryImpl) GetMessages(spaceID string) ([]model.Message, error) {
 	var messages []model.Message
-	result := r.Db.Where("space_id = ?", spaceID).Find(&messages)
+	result := r.Db.
+		Where("space_id = ?", spaceID).
+		Preload("User").
+		Preload("Space").
+		Order("created_at DESC").
+		Find(&messages)
 	if result.Error != nil {
 		return nil, result.Error
 	}

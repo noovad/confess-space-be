@@ -8,6 +8,7 @@ import (
 	"go_confess_space-project/helper/responsejson"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type MessageController struct {
@@ -32,7 +33,7 @@ func (c *MessageController) CreateMessage(ctx *gin.Context) {
 		return
 	}
 
-	message, err := c.messageService.CreateMessage(requestBody, userId.(string))
+	message, err := c.messageService.CreateMessage(requestBody, userId.(uuid.UUID).String())
 	if err != nil {
 		if errors.Is(err, customerror.ErrValidation) {
 			responsejson.BadRequest(ctx, err, "Validation error")
