@@ -33,12 +33,14 @@ func UserSpaceInjector() *controller.UserSpaceController {
 	return userSpaceController
 }
 
-func MessageInjector() *service.MessageService {
+func MessageInjector() *controller.MessageController {
 	db := config.DatabaseConnection()
 	messageRepository := repository.NewMessageRepositoryImpl(db)
 	validate := config.Validator()
-	messageService := service.NewMessageService(messageRepository, validate)
-	return messageService
+	messageService := service.NewMessageServiceImpl(messageRepository, validate)
+	webSocketController := controller.NewWebSocketController()
+	messageController := controller.NewMessageController(messageService, webSocketController)
+	return messageController
 }
 
 func UserSpaceLastSeenInjector() *controller.UserSpaceLastSeenController {

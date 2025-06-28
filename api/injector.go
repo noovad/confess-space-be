@@ -33,9 +33,11 @@ func UserSpaceInjector() *controller.UserSpaceController {
 	return nil
 }
 
-func MessageInjector() *service.MessageService {
+func MessageInjector() *controller.MessageController {
 	wire.Build(
-		service.NewMessageService,
+		controller.NewMessageController,
+		controller.NewWebSocketController,
+		service.NewMessageServiceImpl,
 		repository.NewMessageRepositoryImpl,
 		config.Validator,
 		config.DatabaseConnection,

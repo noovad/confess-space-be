@@ -10,19 +10,24 @@ import (
 	"github.com/google/uuid"
 )
 
-type MessageService struct {
-	MessageRepository repository.MessageRepository
-	Validate          *validator.Validate
+type MessageService interface {
+	CreateMessage(req dto.MessageRequest, id string) (model.Message, error)
+	GetMessages(spaceID string) ([]model.Message, error)
 }
 
-func NewMessageService(messageRepository repository.MessageRepository, validate *validator.Validate) *MessageService {
-	return &MessageService{
+func NewMessageServiceImpl(messageRepository repository.MessageRepository, validate *validator.Validate) MessageService {
+	return &MessageServiceImpl{
 		MessageRepository: messageRepository,
 		Validate:          validate,
 	}
 }
 
-func (s *MessageService) CreateMessage(req dto.MessageRequest, id string) (model.Message, error) {
+type MessageServiceImpl struct {
+	MessageRepository repository.MessageRepository
+	Validate          *validator.Validate
+}
+
+func (s *MessageServiceImpl) CreateMessage(req dto.MessageRequest, id string) (model.Message, error) {
 	err := s.Validate.Struct(req)
 
 	if err != nil {
@@ -42,6 +47,6 @@ func (s *MessageService) CreateMessage(req dto.MessageRequest, id string) (model
 	return createdMessage, nil
 }
 
-func (s *MessageService) GetMessages(spaceID string) ([]model.Message, error) {
+func (s *MessageServiceImpl) GetMessages(spaceID string) ([]model.Message, error) {
 	return s.MessageRepository.GetMessages(spaceID)
 }
