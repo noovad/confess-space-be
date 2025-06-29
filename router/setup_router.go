@@ -1,6 +1,7 @@
 package router
 
 import (
+	"go_confess_space-project/config/websocket"
 	"net/http"
 	"os"
 	"time"
@@ -9,7 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func SetupRouter() *gin.Engine {
+func SetupRouter(hub *websocket.Hub) *gin.Engine {
 	r := gin.Default()
 
 	r.Use(cors.New(cors.Config{
@@ -28,7 +29,7 @@ func SetupRouter() *gin.Engine {
 
 	SpaceRoutes(apiV1)
 	UserSpaceRoutes(apiV1)
-	MessageRoutes(apiV1)
+	MessageRoutes(apiV1, hub)
 	UserSpaceLastSeenRoutes(apiV1)
 
 	return r

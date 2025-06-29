@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"log"
 	"net/http"
 
 	"go_confess_space-project/config/websocket"
@@ -23,53 +22,43 @@ type WebSocketController struct {
 	hub *websocket.Hub
 }
 
-func NewWebSocketController() *WebSocketController {
-	hub := websocket.NewHub()
+func NewWebSocketController(hub *websocket.Hub) *WebSocketController {
 	go hub.Run()
-	log.Println("[WebSocket] Hub started and running")
 	return &WebSocketController{hub: hub}
 }
 
 func (c *WebSocketController) HandleWebSocket(ctx *gin.Context) {
 	username := ctx.Query("username")
-	email := ctx.Query("email")
+	name := ctx.Query("name")
+	avatarType := ctx.Query("avatar_type")
 	channel := ctx.Query("channel")
 
-	if username == "" || email == "" || channel == "" {
+	if username == "" || name == "" || avatarType == "" || channel == "" {
 		responsejson.BadRequest(ctx, nil, "Missing required query parameters: username, email, channel")
 		return
 	}
 
 	conn, err := upgrader.Upgrade(ctx.Writer, ctx.Request, nil)
 	if err != nil {
-		log.Printf("[WebSocket] Upgrade error: %v", err)
 		return
 	}
-	log.Printf("[WebSocket] Connection established: username=%s, email=%s, channel=%s", username, email, channel)
 
 	client := &websocket.Client{
-		Hub:      c.hub,
-		Conn:     conn,
-		Send:     make(chan websocket.Message, 256),
-		Username: username,
-		Email:    email,
-		Channel:  channel,
+		Hub:        c.hub,
+		Conn:       conn,
+		Send:       make(chan websocket.Message, 256),
+		Username:   username,
+		Name:       name,
+		AvatarType: avatarType,
+		Channel:    channel,
 	}
 
 	c.hub.Register <- client
-	log.Printf("[WebSocket] Client registered: username=%s, channel=%s", username, channel)
 
 	go func() {
-		log.Printf("[WebSocket] WritePump started for username=%s", username)
 		client.WritePump()
 	}()
 	go func() {
-		log.Printf("[WebSocket] ReadPump started for username=%s", username)
 		client.ReadPump()
 	}()
-}
-
-func (c *WebSocketController) SendMessage(message websocket.Message) {
-	log.Printf("[WebSocket] Broadcasting message to channel=%s", message.Channel)
-	c.hub.Broadcast <- message
 }

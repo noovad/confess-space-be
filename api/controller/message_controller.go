@@ -5,7 +5,7 @@ import (
 	"go_confess_space-project/config/websocket"
 	"go_confess_space-project/dto"
 	"go_confess_space-project/helper/responsejson"
-	"log"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -13,13 +13,13 @@ import (
 
 type MessageController struct {
 	messageService service.MessageService
-	wsController   *WebSocketController
+	hub            *websocket.Hub
 }
 
-func NewMessageController(messageService service.MessageService, wsController *WebSocketController) *MessageController {
+func NewMessageController(messageService service.MessageService, hub *websocket.Hub) *MessageController {
 	return &MessageController{
 		messageService: messageService,
-		wsController:   wsController,
+		hub:            hub,
 	}
 }
 
@@ -44,18 +44,15 @@ func (c *MessageController) CreateMessage(ctx *gin.Context) {
 	}
 
 	wsMessage := websocket.Message{
-		Type:    websocket.MessageTypeChat,
-		ID:      message.ID.String(),
-		Content: message.Content,
-		// Sender:    message.UserID.String(),
-		Sender:    "Nova",
+		Type:      websocket.MessageTypeChat,
+		ID:        message.ID.String(),
+		Content:   message.Content,
+		Sender:    message.UserID.String(),
 		Channel:   message.SpaceID.String(),
-		CreatedAt: message.CreatedAt,
+		CreatedAt: time.Now(),
 	}
 
-	log.Printf("[WebSocket] Broadcasting message to channel=%s, sender=%s, content=%s", wsMessage.Channel, wsMessage.Sender, wsMessage.Content)
-
-	c.wsController.SendMessage(wsMessage)
+	c.hub.Broadcast <- wsMessage
 
 	responsejson.Created(ctx, message, "Message sent successfully")
 }

@@ -1,12 +1,10 @@
 package websocket
 
 import (
-	"log"
 	"sync"
 	"time"
 )
 
-// MessageType defines different types of messages
 type MessageType string
 
 const (
@@ -14,36 +12,28 @@ const (
 	MessageTypeUsers MessageType = "users"
 )
 
-// Message represents a message sent over WebSocket
 type Message struct {
 	Type      MessageType         `json:"type"`
 	ID        string              `json:"id,omitempty"`
 	Content   string              `json:"content,omitempty"`
 	Sender    string              `json:"sender,omitempty"`
-	Receiver  string              `json:"receiver,omitempty"`
 	Channel   string              `json:"channel,omitempty"`
 	CreatedAt time.Time           `json:"created_at,omitempty"`
 	UsersData []map[string]string `json:"users_data,omitempty"`
 }
 
-// Hub maintains active clients and broadcasts messages
 type Hub struct {
-	// Registered clients by channel
-	Users map[string]map[string]*Client // map[channel][username]*Client
+	Users map[string]map[string]*Client
 
-	// Inbound messages from clients
 	Broadcast chan Message
 
-	// Register requests from clients
 	Register chan *Client
 
-	// Unregister requests from clients
 	Unregister chan *Client
 
 	mu sync.Mutex
 }
 
-// NewHub creates a new hub instance
 func NewHub() *Hub {
 	return &Hub{
 		Users:      make(map[string]map[string]*Client),
@@ -53,7 +43,6 @@ func NewHub() *Hub {
 	}
 }
 
-// Run starts the hub to handle client connections and messages
 func (h *Hub) Run() {
 	for {
 		select {
@@ -65,8 +54,6 @@ func (h *Hub) Run() {
 			h.Users[client.Channel][client.Username] = client
 			h.mu.Unlock()
 
-			log.Printf("[REGISTER] User '%s' joined channel '%s'", client.Username, client.Channel)
-
 			go h.broadcastUserList(client.Channel)
 
 		case client := <-h.Unregister:
@@ -75,10 +62,8 @@ func (h *Hub) Run() {
 				if _, ok := channelClients[client.Username]; ok {
 					delete(channelClients, client.Username)
 					close(client.Send)
-					log.Printf("[UNREGISTER] User '%s' left channel '%s'", client.Username, client.Channel)
 					if len(channelClients) == 0 {
 						delete(h.Users, client.Channel)
-						log.Printf("[CHANNEL EMPTY] Channel '%s' deleted", client.Channel)
 					}
 				}
 			}
@@ -92,11 +77,9 @@ func (h *Hub) Run() {
 				for _, client := range channelClients {
 					select {
 					case client.Send <- message:
-						log.Printf("[BROADCAST] Message sent to '%s' in channel '%s'", client.Username, message.Channel)
 					default:
 						close(client.Send)
 						delete(channelClients, client.Username)
-						log.Printf("[ERROR] Failed to send message to '%s' in channel '%s', client unregistered", client.Username, message.Channel)
 					}
 				}
 			}
@@ -105,7 +88,6 @@ func (h *Hub) Run() {
 	}
 }
 
-// broadcastUserList sends the current list of active users to all clients in a channel
 func (h *Hub) broadcastUserList(channel string) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
@@ -115,8 +97,9 @@ func (h *Hub) broadcastUserList(channel string) {
 	if channelClients, ok := h.Users[channel]; ok {
 		for username, client := range channelClients {
 			users = append(users, map[string]string{
-				"username": username,
-				"email":    client.Email,
+				"username":    username,
+				"name":        client.Name,
+				"avatar_type": client.AvatarType,
 			})
 		}
 
@@ -124,14 +107,13 @@ func (h *Hub) broadcastUserList(channel string) {
 			Type:      MessageTypeUsers,
 			UsersData: users,
 			Channel:   channel,
+			CreatedAt: time.Now(),
 		}
 
 		for _, client := range channelClients {
 			select {
 			case client.Send <- message:
-				log.Printf("[USERLIST] Sent user list to '%s' in channel '%s'", client.Username, channel)
 			default:
-				log.Printf("[ERROR] Failed to send user list to '%s' in channel '%s'", client.Username, channel)
 			}
 		}
 	}

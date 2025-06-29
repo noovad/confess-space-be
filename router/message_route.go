@@ -3,15 +3,19 @@ package router
 import (
 	"go_confess_space-project/api"
 	"go_confess_space-project/api/controller"
+	"go_confess_space-project/config/websocket"
 
 	"github.com/gin-gonic/gin"
 	"github.com/noovad/go-auth/helper"
 )
 
-func MessageRoutes(r *gin.RouterGroup) {
+func MessageRoutes(r *gin.RouterGroup, hub *websocket.Hub) {
 	authMiddleware := helper.AuthMiddleware
-	wsController := controller.NewWebSocketController()
-	messageController := api.MessageInjector()
+	wsController := controller.NewWebSocketController(hub)
+	messageController := controller.NewMessageController(
+		*api.MessageInjector(),
+		hub,
+	)
 
 	{
 		r.GET("/ws/connect", wsController.HandleWebSocket)

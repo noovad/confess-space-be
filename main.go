@@ -2,6 +2,7 @@ package main
 
 import (
 	"go_confess_space-project/config"
+	"go_confess_space-project/config/websocket"
 	"go_confess_space-project/model"
 	"go_confess_space-project/router"
 	"log"
@@ -28,7 +29,10 @@ func main() {
 		log.Fatal("Database migration failed:", err)
 	}
 
-	r := router.SetupRouter()
+	hub := websocket.NewHub()
+	go hub.Run()
+
+	r := router.SetupRouter(hub)
 
 	port := os.Getenv("PORT")
 	if port == "" {
