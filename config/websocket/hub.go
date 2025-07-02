@@ -1,6 +1,8 @@
 package websocket
 
 import (
+	"go_confess_space-project/model"
+	"log"
 	"sync"
 	"time"
 )
@@ -15,8 +17,7 @@ const (
 type Message struct {
 	Type      MessageType         `json:"type"`
 	ID        string              `json:"id,omitempty"`
-	Content   string              `json:"content,omitempty"`
-	Sender    string              `json:"sender,omitempty"`
+	Message   model.Message       `json:"message,omitempty"`
 	Channel   string              `json:"channel,omitempty"`
 	CreatedAt time.Time           `json:"created_at,omitempty"`
 	UsersData []map[string]string `json:"users_data,omitempty"`
@@ -51,6 +52,7 @@ func (h *Hub) Run() {
 			if _, ok := h.Users[client.Channel]; !ok {
 				h.Users[client.Channel] = make(map[string]*Client)
 			}
+			log.Printf("Register: user %s joined channel %s", client.Username, client.Channel)
 			h.Users[client.Channel][client.Username] = client
 			h.mu.Unlock()
 
@@ -62,8 +64,10 @@ func (h *Hub) Run() {
 				if _, ok := channelClients[client.Username]; ok {
 					delete(channelClients, client.Username)
 					close(client.Send)
+					log.Printf("Unregister: user %s left channel %s", client.Username, client.Channel)
 					if len(channelClients) == 0 {
 						delete(h.Users, client.Channel)
+						log.Printf("Channel %s is now empty and removed", client.Channel)
 					}
 				}
 			}
@@ -74,12 +78,14 @@ func (h *Hub) Run() {
 		case message := <-h.Broadcast:
 			h.mu.Lock()
 			if channelClients, ok := h.Users[message.Channel]; ok {
+				log.Printf("Broadcast: message to channel %s from %s", message.Channel, message.Message.User.Username)
 				for _, client := range channelClients {
 					select {
 					case client.Send <- message:
 					default:
 						close(client.Send)
 						delete(channelClients, client.Username)
+						log.Printf("Broadcast: closed send channel for user %s in channel %s", client.Username, message.Channel)
 					}
 				}
 			}
@@ -100,6 +106,7 @@ func (h *Hub) broadcastUserList(channel string) {
 				"username":    username,
 				"name":        client.Name,
 				"avatar_type": client.AvatarType,
+				"created_at":  client.CreatedAt.GoString(),
 			})
 		}
 

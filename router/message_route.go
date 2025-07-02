@@ -20,7 +20,7 @@ func MessageRoutes(r *gin.RouterGroup, hub *websocket.Hub) {
 	{
 		r.GET("/ws/connect", wsController.HandleWebSocket)
 
-		r.POST("/messages", authMiddleware, messageController.CreateMessage)
-		r.GET("/messages/channel/:channelID", authMiddleware, messageController.GetChannelMessages)
+		r.POST("/message", authMiddleware, messageController.CreateMessage)
+		r.GET("/messages/:channelID", authMiddleware, messageController.GetChannelMessages)
 	}
 }

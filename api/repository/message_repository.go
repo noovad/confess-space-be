@@ -25,7 +25,16 @@ func (r *MessageRepositoryImpl) CreateMessage(message model.Message) (model.Mess
 		return model.Message{}, result.Error
 	}
 
-	return message, nil
+	var createdMessage model.Message
+	err := r.Db.
+		Preload("User").
+		Preload("Space").
+		First(&createdMessage, "id = ?", message.ID).Error
+	if err != nil {
+		return model.Message{}, err
+	}
+
+	return createdMessage, nil
 }
 
 func (r *MessageRepositoryImpl) GetMessages(spaceID string) ([]model.Message, error) {

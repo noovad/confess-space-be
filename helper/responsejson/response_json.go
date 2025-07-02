@@ -67,10 +67,14 @@ func BadRequest(ctx *gin.Context, err error, message ...string) {
 	if len(message) > 0 && message[0] != "" {
 		msg = message[0]
 	}
+	var errors any
+	if err != nil {
+		errors = err.Error()
+	}
 	ctx.JSON(http.StatusBadRequest, Response{
 		Success: false,
 		Message: msg,
-		Errors:  err.Error(),
+		Errors:  errors,
 	})
 }
 

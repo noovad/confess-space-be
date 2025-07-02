@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"net/http"
 
 	"go_confess_space-project/config/websocket"
@@ -34,12 +35,14 @@ func (c *WebSocketController) HandleWebSocket(ctx *gin.Context) {
 	channel := ctx.Query("channel")
 
 	if username == "" || name == "" || avatarType == "" || channel == "" {
-		responsejson.BadRequest(ctx, nil, "Missing required query parameters: username, email, channel")
+		err := fmt.Errorf("missing parameters: username, name, avatar_type, or channel")
+		responsejson.BadRequest(ctx, err, "")
 		return
 	}
 
 	conn, err := upgrader.Upgrade(ctx.Writer, ctx.Request, nil)
 	if err != nil {
+		fmt.Printf("WebSocket upgrade error: %v\n", err)
 		return
 	}
 

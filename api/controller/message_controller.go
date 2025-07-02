@@ -24,7 +24,11 @@ func NewMessageController(messageService service.MessageService, hub *websocket.
 }
 
 func (c *MessageController) CreateMessage(ctx *gin.Context) {
-
+	channel := ctx.Query("channel")
+	if channel == "" {
+		responsejson.BadRequest(ctx, nil, "Channel parameter is required")
+		return
+	}
 	var requestBody dto.MessageRequest
 	if err := ctx.ShouldBindJSON(&requestBody); err != nil {
 		responsejson.BadRequest(ctx, err, "Invalid request body")
@@ -46,9 +50,8 @@ func (c *MessageController) CreateMessage(ctx *gin.Context) {
 	wsMessage := websocket.Message{
 		Type:      websocket.MessageTypeChat,
 		ID:        message.ID.String(),
-		Content:   message.Content,
-		Sender:    message.UserID.String(),
-		Channel:   message.SpaceID.String(),
+		Message:   message,
+		Channel:   channel,
 		CreatedAt: time.Now(),
 	}
 

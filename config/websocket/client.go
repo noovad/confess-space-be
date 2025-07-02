@@ -21,6 +21,7 @@ type Client struct {
 	Name       string
 	AvatarType string
 	Channel    string
+	CreatedAt  time.Time
 }
 
 func (c *Client) ReadPump() {
@@ -47,7 +48,6 @@ func (c *Client) ReadPump() {
 		}
 
 		message.Channel = c.Channel
-		message.Sender = c.Username
 		message.CreatedAt = time.Now()
 
 		c.Hub.Broadcast <- message
