@@ -11,14 +11,12 @@ import (
 
 func MessageRoutes(r *gin.RouterGroup, hub *websocket.Hub) {
 	authMiddleware := helper.AuthMiddleware
-	wsController := controller.NewWebSocketController(hub)
 	messageController := controller.NewMessageController(
 		*api.MessageInjector(),
 		hub,
 	)
 
 	{
-		r.GET("/ws/connect", wsController.HandleWebSocket)
 
 		r.POST("/message", authMiddleware, messageController.CreateMessage)
 		r.GET("/messages/:channelID", authMiddleware, messageController.GetChannelMessages)

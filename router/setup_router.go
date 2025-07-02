@@ -1,6 +1,7 @@
 package router
 
 import (
+	"go_confess_space-project/api/controller"
 	"go_confess_space-project/config/websocket"
 	"net/http"
 	"os"
@@ -12,6 +13,7 @@ import (
 
 func SetupRouter(hub *websocket.Hub) *gin.Engine {
 	r := gin.Default()
+	wsController := controller.NewWebSocketController(hub)
 
 	r.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{os.Getenv("FRONTEND_BASE_URL")},
@@ -24,6 +26,8 @@ func SetupRouter(hub *websocket.Hub) *gin.Engine {
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "pong"})
 	})
+
+	r.GET("/ws/connect", wsController.HandleWebSocket)
 
 	apiV1 := r.Group("/api/v1")
 
