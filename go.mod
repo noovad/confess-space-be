@@ -6,9 +6,11 @@ require (
 	github.com/gin-gonic/gin v1.10.0
 	github.com/google/wire v0.6.0
 	github.com/jackc/pgx/v5 v5.5.5
-	github.com/noovad/go-auth v0.1.3
+	github.com/noovad/go-auth v0.1.4
 	gorm.io/gorm v1.25.10
 )
+
+// replace github.com/noovad/go-auth => ../go_auth
 
 require (
 	cloud.google.com/go/compute/metadata v0.3.0 // indirect
